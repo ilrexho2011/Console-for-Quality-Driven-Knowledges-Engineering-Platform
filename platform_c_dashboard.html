@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QDKEP Knowledge Console</title>
+<style>
+  :root{
+    --ink:#14181f; --panel:#1b212b; --line:#2b3340; --mut:#8a93a3;
+    --paper:#f3f1ea; --card:#ffffff; --soft:#e9e6dd; --softer:#f7f5ef;
+    --accent:#c2511f; --accent-d:#8f3a14; --ok:#2f7d54; --warn:#9a7314; --bad:#a3322b;
+    --mono:"SFMono-Regular",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+    font-size:15px;line-height:1.55}
+  header{background:var(--ink);color:var(--paper);padding:18px 28px;
+    display:flex;align-items:baseline;gap:18px;border-bottom:3px solid var(--accent)}
+  header .mark{font-family:var(--mono);font-weight:600;letter-spacing:.06em;font-size:18px}
+  header .sub{color:#aeb6c3;font-size:13px;font-family:var(--mono)}
+  header .who{margin-left:auto;font-size:12px;color:#aeb6c3;font-family:var(--mono)}
+  nav{display:flex;gap:2px;padding:0 28px;background:var(--ink)}
+  nav button{background:transparent;border:0;color:#aeb6c3;font-family:var(--mono);
+    font-size:13px;padding:11px 16px;cursor:pointer;border-bottom:2px solid transparent}
+  nav button:hover{color:var(--paper)}
+  nav button.on{color:var(--paper);border-bottom-color:var(--accent)}
+  main{max-width:980px;margin:0 auto;padding:30px 28px 80px}
+  .tab{display:none}.tab.on{display:block}
+  h1{font-size:22px;font-weight:600;margin:0 0 4px}
+  .lede{color:#5b6472;font-size:14px;margin:0 0 22px}
+  label{display:block;font-family:var(--mono);font-size:12px;letter-spacing:.04em;
+    color:#5b6472;text-transform:uppercase;margin:14px 0 6px}
+  textarea,input,select{width:100%;font-family:var(--mono);font-size:13px;
+    background:var(--card);border:1px solid #d8d4c8;border-radius:6px;padding:10px 12px;color:var(--ink)}
+  textarea{min-height:180px;resize:vertical;line-height:1.5}
+  .row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .row.two{grid-template-columns:1fr 1fr}
+  button.go{margin-top:18px;background:var(--accent);color:#fff;border:0;border-radius:6px;
+    font-family:var(--mono);font-size:13px;letter-spacing:.04em;padding:11px 22px;cursor:pointer}
+  button.go:hover{background:var(--accent-d)}
+  button.go:disabled{opacity:.5;cursor:default}
+  .out{margin-top:24px}
+  .scorecard{display:flex;align-items:stretch;gap:0;border:1px solid #d8d4c8;border-radius:8px;
+    overflow:hidden;background:var(--card)}
+  .scorecard .big{padding:20px 26px;min-width:150px;display:flex;flex-direction:column;
+    justify-content:center;border-right:1px solid var(--soft)}
+  .scorecard .big .num{font-family:var(--mono);font-size:42px;font-weight:600;line-height:1}
+  .scorecard .big .st{font-family:var(--mono);font-size:11px;letter-spacing:.05em;
+    text-transform:uppercase;margin-top:8px}
+  .scorecard .bars{flex:1;padding:16px 22px;display:flex;flex-direction:column;justify-content:center;gap:9px}
+  .bar{display:grid;grid-template-columns:160px 1fr 46px;align-items:center;gap:10px;
+    font-family:var(--mono);font-size:11px;color:#5b6472}
+  .bar .track{height:7px;background:var(--soft);border-radius:4px;overflow:hidden}
+  .bar .fill{height:100%;background:var(--accent);border-radius:4px}
+  .bar .val{text-align:right;color:var(--ink)}
+  .st.s-enterprise_ready{color:var(--ok)} .st.s-ready_minor{color:var(--ok)}
+  .st.s-conditional{color:var(--warn)} .st.s-needs_remediation{color:var(--warn)}
+  .st.s-not_ready,.st.s-rejected,.st.s-duplicate{color:var(--bad)}
+  .num.s-enterprise_ready,.num.s-ready_minor{color:var(--ok)}
+  .num.s-conditional,.num.s-needs_remediation{color:var(--warn)}
+  .num.s-not_ready{color:var(--bad)}
+  .issues{margin-top:16px;border-left:3px solid var(--warn);background:#fbf6e9;
+    padding:12px 16px;font-family:var(--mono);font-size:12px;color:#6b5a1f}
+  .issues ul{margin:6px 0 0;padding-left:18px}
+  .banner{padding:12px 16px;border-radius:6px;font-family:var(--mono);font-size:13px;margin-top:20px}
+  .banner.ok{background:#e7f1ea;color:var(--ok);border-left:3px solid var(--ok)}
+  .banner.err{background:#f6e8e6;color:var(--bad);border-left:3px solid var(--bad)}
+  .hit{border:1px solid #d8d4c8;border-radius:7px;background:var(--card);
+    padding:13px 16px;margin-top:10px}
+  .hit .meta{font-family:var(--mono);font-size:11px;color:var(--mut);
+    display:flex;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+  .hit .meta .tag{color:var(--accent-d)}
+  .hit .snip{font-size:13px;color:#36404f}
+  .answer{border:1px solid #d8d4c8;border-radius:8px;background:var(--card);padding:18px 22px}
+  .answer .body{font-size:15px;line-height:1.7;white-space:pre-wrap}
+  .cites{margin-top:14px;border-top:1px solid var(--soft);padding-top:12px;
+    font-family:var(--mono);font-size:11px;color:var(--mut);display:flex;gap:8px;flex-wrap:wrap}
+  .cites .c{background:var(--softer);border:1px solid var(--soft);border-radius:4px;padding:3px 8px}
+  .hint{font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:6px}
+  .dropzone{display:flex;align-items:center;gap:18px;border:1.5px dashed #c8c2b2;
+    border-radius:10px;background:var(--softer);padding:20px 22px;margin-top:8px;
+    transition:border-color .15s,background .15s}
+  .dropzone.drag{border-color:var(--accent);background:#f6ece4}
+  .dropzone strong{display:block;font-size:14px;color:#3a4250}
+  .dropzone .dz-sub{display:block;font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:3px}
+  .dropzone .browse{margin-left:auto;background:var(--ink);color:var(--paper);border:0;
+    border-radius:6px;font-family:var(--mono);font-size:12px;padding:9px 16px;cursor:pointer}
+  .dropzone .browse:hover{background:#222a36}
+  .chunkcfg{margin-top:20px;border:1px solid var(--soft);border-radius:8px;
+    background:var(--card);padding:14px 18px 18px}
+  .chunkcfg .cc-head{font-family:var(--mono);font-size:12px;letter-spacing:.05em;
+    text-transform:uppercase;color:var(--accent-d);margin-bottom:4px}
+  .cc-hint{font-family:var(--mono);font-size:11px;color:var(--mut)}
+  .ix-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:6px 0 26px}
+  .ix-card{border:1px solid #d8d4c8;border-radius:8px;background:var(--card);padding:16px 18px}
+  .ix-card .name{font-family:var(--mono);font-size:11px;color:var(--mut);margin-bottom:8px;
+    word-break:break-all}
+  .ix-card .pts{font-size:30px;font-weight:600;line-height:1}
+  .ix-card .pts small{font-size:13px;font-weight:400;color:var(--mut);margin-left:4px}
+  table.ix{width:100%;border-collapse:collapse;font-size:13px;background:var(--card);
+    border:1px solid #d8d4c8;border-radius:8px;overflow:hidden}
+  table.ix th{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;
+    color:var(--mut);text-align:left;padding:11px 16px;background:var(--softer);border-bottom:1px solid var(--soft)}
+  table.ix td{padding:11px 16px;border-bottom:1px solid var(--soft);font-family:var(--mono)}
+  table.ix td.r,table.ix th.r{text-align:right}
+  table.ix tr:last-child td{border-bottom:0}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:0}
+  .dot.green{background:var(--ok)} .dot.empty{background:var(--mut)}
+  .subtabs{display:flex;gap:24px;border-bottom:1px solid var(--soft);margin:0 0 18px}
+  .subtab{background:0;border:0;border-bottom:2px solid transparent;color:var(--mut);
+    font-family:var(--mono);font-size:13px;padding:8px 2px;cursor:pointer;margin-bottom:-1px}
+  .subtab.on{color:var(--accent);border-bottom-color:var(--accent)}
+  .subpane{display:none}.subpane.on{display:block}
+  .dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;margin-bottom:14px}
+  .dash-cell{border:1px solid #d8d4c8;border-radius:8px;background:var(--card);padding:14px 16px}
+  .dash-cell .k{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--mut)}
+  .dash-cell .v{font-size:30px;font-weight:600;margin-top:6px;line-height:1}
+  .dash-section{font-family:var(--mono);font-size:12px;letter-spacing:.05em;text-transform:uppercase;
+    color:var(--accent-d);margin:22px 0 10px}
+  .doc{border:1px solid #d8d4c8;border-radius:8px;background:var(--card);margin-top:10px;overflow:hidden}
+  .doc .row-h{display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer}
+  .doc .row-h:hover{background:var(--softer)}
+  .doc .row-h .fn{font-family:var(--mono);font-size:13px;color:#2a3240;flex:1;word-break:break-all}
+  .doc .row-h .chev{color:var(--mut);font-family:var(--mono)}
+  .pill{font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;
+    padding:3px 8px;border-radius:4px;background:var(--soft);color:#525b6a}
+  .pill.s-indexed{background:#e3efe8;color:var(--ok)} .pill.s-draft{background:#eee;color:#525b6a}
+  .pill.s-rejected{background:#f4e3e1;color:var(--bad)}
+  .doc .detail{display:none;border-top:1px solid var(--soft);padding:16px}
+  .doc.open .detail{display:block}
+  .dtabs{display:flex;gap:18px;border-bottom:1px solid var(--soft);margin-bottom:14px}
+  .dtab{background:0;border:0;border-bottom:2px solid transparent;color:var(--mut);
+    font-family:var(--mono);font-size:12px;padding:6px 2px;cursor:pointer;margin-bottom:-1px}
+  .dtab.on{color:var(--accent);border-bottom-color:var(--accent)}
+  .dpane{display:none}.dpane.on{display:block}
+  .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 28px;font-size:13px}
+  .meta-grid .m{display:flex;gap:8px}
+  .meta-grid .m .ml{font-family:var(--mono);font-size:11px;color:var(--mut);min-width:96px;text-transform:uppercase;letter-spacing:.03em}
+  .meta-grid .m .mv{font-family:var(--mono);color:#2a3240;word-break:break-all}
+  .audit-row{font-family:var(--mono);font-size:12px;color:#525b6a;display:flex;gap:10px;
+    align-items:center;padding:5px 0}
+  .audit-row .ts{color:var(--ok)}
+  .del{margin-top:18px;border-top:1px solid var(--soft);padding-top:14px;display:flex;
+    align-items:center;gap:12px}
+  .del label{margin:0;text-transform:none;letter-spacing:0;color:#525b6a;display:flex;align-items:center;gap:7px}
+  .del button{margin-left:auto;background:#fff;border:1px solid var(--bad);color:var(--bad);
+    font-family:var(--mono);font-size:12px;padding:8px 18px;border-radius:6px;cursor:pointer}
+  .del button:disabled{opacity:.4;cursor:default;border-color:#ccc;color:#999}
+  .del button:not(:disabled):hover{background:var(--bad);color:#fff}
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid #ffffff60;
+    border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:7px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <span class="mark">QDKEP</span>
+  <span class="sub">Knowledge Console · testing system</span>
+  <span class="who">admin · single-user</span>
+</header>
+<nav>
+  <button data-t="dashboard" class="on">dashboard</button>
+  <button data-t="upload">upload</button>
+  <button data-t="indexes">indexes</button>
+  <button data-t="documents">documents</button>
+  <button data-t="search">search</button>
+  <button data-t="answer">answer</button>
+  <button data-t="benchmark">benchmark</button>
+</nav>
+<main>
+
+  <section id="dashboard" class="tab on">
+    <h1>Dashboard</h1>
+    <div class="subtabs">
+      <button class="subtab on" data-s="ov">Overview</button>
+      <button class="subtab" data-s="ans">Answer</button>
+    </div>
+
+    <div id="sub-ov" class="subpane on">
+      <p class="lede">Platform overview and health status.</p>
+      <div id="dash-cards"></div>
+    </div>
+
+    <div id="sub-ans" class="subpane">
+      <p class="lede">Generate an AMS-oriented answer based on indexed knowledge.</p>
+      <label for="da-q">Question</label>
+      <textarea id="da-q" style="min-height:90px" placeholder="What should an AMS consultant check first for a CPI health issue?"></textarea>
+      <div class="row">
+        <div><label>customer_id</label><input id="da-cust"></div>
+        <div><label>system_id</label><input id="da-sys"></div>
+        <div><label>artifact_type</label><input id="da-art"></div>
+        <div><label>top_k</label><input id="da-k" type="number" value="3" min="1" max="20"></div>
+      </div>
+      <button class="go" id="da-go">Generate answer</button>
+      <div class="out" id="da-out"></div>
+    </div>
+  </section>
+
+  <section id="upload" class="tab">
+    <h1>Upload knowledge document</h1>
+    <p class="lede">Drop or browse a .md / .txt artifact — it loads automatically.
+      The console scores it, blocks duplicates by canonical signature, then chunks and indexes it.</p>
+
+    <div id="drop" class="dropzone">
+      <div>
+        <strong>Drag &amp; drop a document here</strong>
+        <span class="dz-sub">or browse · .md .txt · the filename and text fill in automatically</span>
+      </div>
+      <button type="button" class="browse" id="browse-btn">Browse files</button>
+      <input type="file" id="file-in" accept=".md,.txt,.markdown" hidden>
+    </div>
+
+    <label for="up-name">Filename</label>
+    <input id="up-name" placeholder="RB_RCMO_CPI_ODATA_404_P2_v1.md" value="RB_RCMO_CPI_DEMO_P2_v1.md">
+    <label for="up-text">Document (markdown)</label>
+    <textarea id="up-text" placeholder="# Title&#10;&#10;environment: &quot;demo&quot;&#10;customer_id: &quot;RCMO&quot;&#10;..."></textarea>
+
+    <div class="chunkcfg">
+      <div class="cc-head">Chunk configuration</div>
+      <div class="row">
+        <div>
+          <label for="cc-mode">Chunk mode</label>
+          <select id="cc-mode">
+            <option value="bm25_typed">bm25_typed</option>
+            <option value="procedure">procedure</option>
+            <option value="paragraph">paragraph</option>
+            <option value="fixed">fixed</option>
+          </select>
+        </div>
+        <div>
+          <label for="cc-size">Chunk size (chars)</label>
+          <input id="cc-size" type="number" value="400" min="100" max="4000">
+        </div>
+        <div>
+          <label for="cc-overlap">Chunk overlap (chars)</label>
+          <input id="cc-overlap" type="number" value="80" min="0" max="1000">
+        </div>
+        <div style="display:flex;align-items:flex-end">
+          <span class="cc-hint" id="cc-hint">profile default: size 400 · overlap 80</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="go" id="up-go">Score &amp; index</button>
+    <div class="out" id="up-out"></div>
+  </section>
+
+  <section id="indexes" class="tab">
+    <h1>Vector indexes</h1>
+    <p class="lede">Collection status and vector index health, grouped by artifact type.
+      Points are indexed chunks; indexed vectors are chunks with a stored embedding.</p>
+    <div id="ix-cards" class="ix-cards"></div>
+    <div id="ix-table" class="out"></div>
+  </section>
+
+  <section id="documents" class="tab">
+    <h1>Documents</h1>
+    <p class="lede">Indexed and draft documents with metadata, quality scores, audit
+      trail and version history. Expand a row for detail; delete with confirmation.</p>
+    <div id="docs-count" class="hint"></div>
+    <div id="docs-list" class="out"></div>
+  </section>
+
+  <section id="search" class="tab">
+    <h1>Search knowledge</h1>
+    <p class="lede">Hybrid retrieval — semantic plus BM25 — reranked by the 8-signal engine.</p>
+    <label for="s-q">Query</label>
+    <input id="s-q" placeholder="XML parsing failed in CPI Groovy">
+    <div class="row">
+      <div><label>customer_id</label><input id="s-cust"></div>
+      <div><label>system_id</label><input id="s-sys"></div>
+      <div><label>artifact_type</label><input id="s-art" placeholder="kedb / runbook"></div>
+      <div><label>top_k</label><input id="s-k" type="number" value="5" min="1" max="20"></div>
+    </div>
+    <button class="go" id="s-go">Search</button>
+    <div class="out" id="s-out"></div>
+  </section>
+
+  <section id="answer" class="tab">
+    <h1>Answer</h1>
+    <p class="lede">Grounded AMS answer generated only from indexed knowledge, with inline citations.</p>
+    <label for="a-q">Question</label>
+    <textarea id="a-q" style="min-height:90px" placeholder="How do I recover from XML parsing failed on the CPI Groovy step?"></textarea>
+    <div class="row">
+      <div><label>customer_id</label><input id="a-cust"></div>
+      <div><label>system_id</label><input id="a-sys"></div>
+      <div><label>artifact_type</label><input id="a-art"></div>
+      <div><label>top_k</label><input id="a-k" type="number" value="5" min="1" max="20"></div>
+    </div>
+    <button class="go" id="a-go">Generate answer</button>
+    <div class="out" id="a-out"></div>
+  </section>
+
+  <section id="benchmark" class="tab">
+    <h1>Benchmark</h1>
+    <p class="lede">Run a query-set with ground-truth relevant document ids to score
+      retrieval precision, recall, faithfulness and citation accuracy.</p>
+    <label for="b-set">Query-set (JSON array)</label>
+    <textarea id="b-set" placeholder='[{"query":"XML parsing failed","filters":{"customer_id":"RCMO"},"relevant_doc_ids":[1],"top_k":5}]'></textarea>
+    <p class="hint">Each entry: query, optional filters, relevant_doc_ids, top_k.</p>
+    <button class="go" id="b-go">Run benchmark</button>
+    <div class="out" id="b-out"></div>
+  </section>
+
+</main>
+<script>
+const $=s=>document.querySelector(s);
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); $('#'+b.dataset.t).classList.add('on');
+  if(b.dataset.t==='indexes') loadIndexes();
+});
+
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); $('#'+b.dataset.t).classList.add('on');
+  if(b.dataset.t==='indexes') loadIndexes();
+  if(b.dataset.t==='dashboard') loadDashboard();
+  if(b.dataset.t==='documents') loadDocuments();
+});
+
+// Dashboard sub-tabs (Overview / Answer)
+document.querySelectorAll('.subtab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.subtab').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.subpane').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); $('#sub-'+b.dataset.s).classList.add('on');
+});
+
+async function loadDashboard(){
+  $('#dash-cards').innerHTML='<div class="hint">loading…</div>';
+  try{
+    const r=await fetch('/dashboard'); const d=await r.json();
+    const cell=(k,v)=>`<div class="dash-cell"><div class="k">${k}</div><div class="v">${v}</div></div>`;
+    $('#dash-cards').innerHTML=
+      `<div class="dash-grid">${cell('Total documents',d.total)}${cell('Draft',d.draft)}`
+      +`${cell('Approved',d.approved)}${cell('Indexed',d.indexed)}${cell('Avg quality',d.avg_quality)}</div>`
+      +`<div class="dash-section">Knowledge operations</div>`
+      +`<div class="dash-grid">${cell('KEDB total',d.kedb_total)}${cell('KEDB indexed',d.kedb_indexed)}`
+      +`${cell('Runbooks total',d.rb_total)}${cell('Runbooks indexed',d.rb_indexed)}</div>`;
+  }catch(e){ $('#dash-cards').innerHTML=`<div class="banner err">${esc(e.message)}</div>`; }
+}
+
+// Dashboard > Answer (same engine as the standalone Answer tab)
+$('#da-go').onclick=async()=>{
+  const btn=$('#da-go'); busy(btn,true,'Generate answer');
+  const body={query:$('#da-q').value, top_k:Number($('#da-k').value)||3,
+    customer_id:$('#da-cust').value||null, system_id:$('#da-sys').value||null,
+    artifact_type:$('#da-art').value||null};
+  try{
+    const {data}=await post('/answer',body);
+    const cites=(data.citations||[]).map(c=>`<span class="c">[${c.ref}] doc ${c.document_id}·${c.section_type}</span>`).join('');
+    $('#da-out').innerHTML=`<div class="answer"><div class="body">${esc(data.answer)}</div>${cites?`<div class="cites">${cites}</div>`:''}</div>`;
+  }catch(e){ $('#da-out').innerHTML=`<div class="banner err">${esc(e.message)}</div>`; }
+  busy(btn,false,'Generate answer');
+};
+
+// DOCUMENTS
+async function loadDocuments(){
+  $('#docs-list').innerHTML='<div class="hint">loading…</div>';
+  try{
+    const r=await fetch('/documents'); const data=await r.json();
+    const docs=data.documents||[];
+    $('#docs-count').textContent=`${docs.length} document(s)`;
+    if(!docs.length){ $('#docs-list').innerHTML='<div class="hint">no documents yet</div>'; return; }
+    $('#docs-list').innerHTML=docs.map(d=>{
+      const q=d.quality_score!=null?d.quality_score.toFixed(1):'—';
+      return `<div class="doc" data-id="${d.id}">
+        <div class="row-h" onclick="toggleDoc(${d.id})">
+          <span class="chev">›</span>
+          <span class="fn">${esc(d.filename)} <small>[${esc(d.version)}]</small></span>
+          <span class="pill">${esc(d.artifact_type)}</span>
+          <span class="pill">q ${q}</span>
+          <span class="pill s-${d.status}">${esc(d.status)}</span>
+        </div>
+        <div class="detail" id="det-${d.id}"></div>
+      </div>`;
+    }).join('');
+  }catch(e){ $('#docs-list').innerHTML=`<div class="banner err">${esc(e.message)}</div>`; }
+}
+
+window.toggleDoc=async(id)=>{
+  const card=document.querySelector(`.doc[data-id="${id}"]`);
+  const open=card.classList.toggle('open');
+  card.querySelector('.chev').textContent=open?'⌄':'›';
+  if(!open) return;
+  const det=$('#det-'+id);
+  det.innerHTML='<div class="hint">loading…</div>';
+  try{
+    const r=await fetch('/document?id='+id); const d=await r.json();
+    const m=(l,v)=>`<div class="m"><span class="ml">${l}</span><span class="mv">${esc(String(v??'—'))}</span></div>`;
+    const audit=(d.audit||[]).map(a=>`<div class="audit-row">
+      <span class="ts">${esc(a.at)}</span><span class="pill">${esc(a.action)}</span>
+      <span>${esc(a.actor)}</span><span>${esc(a.detail||'')}</span></div>`).join('') || '<div class="hint">no audit rows</div>';
+    det.innerHTML=`
+      <div class="dtabs">
+        <button class="dtab on" onclick="dtab(${id},'det')">Details</button>
+        <button class="dtab" onclick="dtab(${id},'aud')">Audit Trail</button>
+        <button class="dtab" onclick="dtab(${id},'ver')">Version History</button>
+      </div>
+      <div class="dpane on" id="dp-det-${id}">
+        <div class="meta-grid">
+          ${m('Document ID',d.id)}${m('Artifact',d.artifact_type)}
+          ${m('Version',d.version)}${m('Priority',d.priority)}
+          ${m('Customer',d.customer_id)}${m('Object',d.object_name)}
+          ${m('System',d.system_id)}${m('Quality',d.quality_score!=null?d.quality_score.toFixed(1)+' ('+(d.quality_status||'').replace(/_/g,' ')+')':'—')}
+          ${m('Environment',d.environment)}${m('Chunks',d.chunks)}
+          ${m('Signature',(d.error_signature||'').slice(0,24)+'…')}${m('Status',d.status)}
+        </div>
+      </div>
+      <div class="dpane" id="dp-aud-${id}">${audit}</div>
+      <div class="dpane" id="dp-ver-${id}">
+        <div class="meta-grid">${m('Version',d.version)}${m('Status',d.status)}${m('Created',d.created_at)}${m('Latest','✓')}</div>
+      </div>
+      <div class="del">
+        <label><input type="checkbox" id="cd-${id}" onchange="$('#delbtn-${id}').disabled=!this.checked"> Confirm delete</label>
+        <button id="delbtn-${id}" disabled onclick="delDoc(${id})">Delete</button>
+      </div>`;
+  }catch(e){ det.innerHTML=`<div class="banner err">${esc(e.message)}</div>`; }
+};
+
+window.dtab=(id,which)=>{
+  ['det','aud','ver'].forEach(w=>{
+    document.querySelector(`#dp-${w}-${id}`).classList.toggle('on',w===which);
+  });
+  const card=$('#det-'+id);
+  card.querySelectorAll('.dtab').forEach(b=>b.classList.remove('on'));
+  event.target.classList.add('on');
+};
+
+window.delDoc=async(id)=>{
+  try{
+    const {status}=await post('/delete',{id});
+    if(status===200){ loadDocuments(); }
+    else { alert('Delete failed'); }
+  }catch(e){ alert(e.message); }
+};
+
+async function loadIndexes(){
+  $('#ix-cards').innerHTML='<div class="hint">loading…</div>';
+  $('#ix-table').innerHTML='';
+  try{
+    const r=await fetch('/indexes'); const data=await r.json();
+    const cols=data.collections||[];
+    if(!cols.length){
+      $('#ix-cards').innerHTML='<div class="hint">no indexed collections yet — upload a document first</div>';
+      return;
+    }
+    $('#ix-cards').innerHTML=cols.map(c=>`<div class="ix-card">
+      <div class="name">${esc(c.collection)}</div>
+      <div class="pts">${c.points}<small>points</small></div></div>`).join('');
+    const rows=cols.map(c=>`<tr>
+      <td>${esc(c.collection)}</td>
+      <td class="r">${c.documents}</td>
+      <td class="r">${c.points}</td>
+      <td class="r">${c.indexed_vectors}</td>
+      <td><span class="dot ${c.status}"></span>${c.status}</td></tr>`).join('');
+    const t=data.totals||{};
+    $('#ix-table').innerHTML=`<table class="ix">
+      <thead><tr><th>Collection</th><th class="r">Documents</th><th class="r">Points</th>
+        <th class="r">Indexed vectors</th><th>Status</th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr><td>total</td><td class="r">${t.documents||0}</td>
+        <td class="r">${t.points||0}</td><td class="r">${t.indexed_vectors||0}</td><td></td></tr></tfoot>
+    </table>`;
+  }catch(e){ $('#ix-cards').innerHTML=`<div class="banner err">${esc(e.message)}</div>`; }
+}
+
+async function post(path,body){
+  const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  return {status:r.status, data:await r.json()};
+}
+function busy(btn,on,label){ btn.disabled=on; btn.innerHTML=on?'<span class="spin"></span>'+label:label; }
+function esc(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+const CAT_LABELS={
+  ingestion_policy_compliance:'policy compliance', bm25_authoring_readiness:'bm25 readiness',
+  chunking_quality:'chunking quality', retrieval_precision:'retrieval precision',
+  retrieval_recall:'retrieval recall', answer_faithfulness:'answer faithfulness',
+  citation_accuracy:'citation accuracy'
+};
+function scorecard(composite,status,cats){
+  const bars=Object.entries(cats).map(([k,v])=>`
+    <div class="bar"><span>${CAT_LABELS[k]||k}</span>
+      <span class="track"><span class="fill" style="width:${Math.max(0,Math.min(100,v))}%"></span></span>
+      <span class="val">${Number(v).toFixed(0)}</span></div>`).join('');
+  return `<div class="scorecard">
+    <div class="big"><span class="num s-${status}">${Number(composite).toFixed(1)}</span>
+      <span class="st s-${status}">${(status||'').replace(/_/g,' ')}</span></div>
+    <div class="bars">${bars}</div></div>`;
+}
+
+// FILE LOADING (drag & drop + browse)
+const CHUNK_DEFAULTS={bm25_typed:[400,80],procedure:[400,80],paragraph:[800,120],fixed:[1000,100]};
+function applyChunkDefaults(){
+  const m=$('#cc-mode').value; const [s,o]=CHUNK_DEFAULTS[m]||[400,80];
+  $('#cc-size').value=s; $('#cc-overlap').value=o;
+  $('#cc-hint').textContent=`profile default: size ${s} · overlap ${o}`;
+}
+$('#cc-mode').onchange=applyChunkDefaults;
+
+function loadFile(file){
+  if(!file) return;
+  $('#up-name').value=file.name;
+  const r=new FileReader();
+  r.onload=()=>{ $('#up-text').value=r.result; };
+  r.readAsText(file);
+}
+$('#browse-btn').onclick=()=>$('#file-in').click();
+$('#file-in').onchange=e=>loadFile(e.target.files[0]);
+const dz=$('#drop');
+['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag');}));
+dz.addEventListener('drop',e=>{ if(e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]); });
+
+// UPLOAD
+$('#up-go').onclick=async()=>{
+  const btn=$('#up-go'); busy(btn,true,'Score & index');
+  try{
+    const {status,data}=await post('/upload',{
+      filename:$('#up-name').value, text:$('#up-text').value,
+      chunk_mode:$('#cc-mode').value,
+      chunk_size:Number($('#cc-size').value)||null,
+      chunk_overlap:Number($('#cc-overlap').value)||null
+    });
+    const out=$('#up-out');
+    if(status===201){
+      const cats=data.categories||{};
+      const iss=(data.issues||[]).map(i=>`<li>${esc(i)}</li>`).join('');
+      out.innerHTML=`<div class="banner ok">indexed · doc #${data.document_id} · ${data.chunks} chunks · mode ${data.chunk_mode||'bm25_typed'} · signature ${data.signature.slice(0,16)}…</div>`
+        + scorecard(data.quality, data.quality_status, cats)
+        + (iss?`<div class="issues">issues<ul>${iss}</ul></div>`:'');
+    }else if(status===409){
+      out.innerHTML=`<div class="banner err">duplicate · signature ${data.signature.slice(0,16)}… already exists</div>`;
+    }else if(status===422){
+      const iss=(data.issues||[]).map(i=>`<li>${esc(i)}</li>`).join('');
+      out.innerHTML=`<div class="banner err">rejected · score ${data.quality} (${(data.quality_status||'').replace(/_/g,' ')}) below threshold</div>
+        ${iss?`<div class="issues">issues<ul>${iss}</ul></div>`:''}`;
+    }else{ out.innerHTML=`<div class="banner err">${esc(data.error||'error')}</div>`; }
+  }catch(e){ $('#up-out').innerHTML=`<div class="banner err">${esc(e.message)}</div>`; }
+  busy(btn,false,'Score & index');
+};
+
+// SEARCH
+$('#s-go').onclick=async()=>{
+  const btn=$('#s-go'); busy(btn,true,'Search');
+  const body={query:$('#s-q').value, top_k:Number($('#s-k').value)||5,
+    customer_id:$('#s-cust').value||null, system_id:$('#s-sys').value||null,
+    artifact_type:$('#s-art').value||null};
+  try{
+    const {data}=await post('/search',body);
+    const hits=(data.hits||[]).map(h=>`<div class="hit">
+      <div class="meta"><span class="tag">#${h.rank}</span><span>doc ${h.document_id}·chunk ${h.chunk_index}</span>
+        <span>${h.section_type}</span><span>${h.artifact_type}</span><span>score ${h.score}</span></div>
+      <div class="snip">${esc(h.snippet)}</div></div>`).join('');
+    $('#s-out').innerHTML = hits || `<div class="banner err">no matches</div>`;
+  }catch(e){ $('#s-out').innerHTML=`<div class="banner err">${esc(e.message)}</div>`; }
+  busy(btn,false,'Search');
+};
+
+// ANSWER
+$('#a-go').onclick=async()=>{
+  const btn=$('#a-go'); busy(btn,true,'Generate answer');
+  const body={query:$('#a-q').value, top_k:Number($('#a-k').value)||5,
+    customer_id:$('#a-cust').value||null, system_id:$('#a-sys').value||null,
+    artifact_type:$('#a-art').value||null};
+  try{
+    const {data}=await post('/answer',body);
+    const cites=(data.citations||[]).map(c=>`<span class="c">[${c.ref}] doc ${c.document_id}·${c.section_type}</span>`).join('');
+    $('#a-out').innerHTML=`<div class="answer"><div class="body">${esc(data.answer)}</div>
+      ${cites?`<div class="cites">${cites}</div>`:''}</div>`;
+  }catch(e){ $('#a-out').innerHTML=`<div class="banner err">${esc(e.message)}</div>`; }
+  busy(btn,false,'Generate answer');
+};
+
+// BENCHMARK
+$('#b-go').onclick=async()=>{
+  const btn=$('#b-go'); busy(btn,true,'Run benchmark');
+  let qset;
+  try{ qset=JSON.parse($('#b-set').value); }
+  catch(e){ $('#b-out').innerHTML=`<div class="banner err">invalid JSON: ${esc(e.message)}</div>`; busy(btn,false,'Run benchmark'); return; }
+  try{
+    const {data}=await post('/benchmark',{query_set:qset});
+    const d=data.dynamic||{};
+    const cats={retrieval_precision:d.retrieval_precision,retrieval_recall:d.retrieval_recall,
+      answer_faithfulness:d.answer_faithfulness,citation_accuracy:d.citation_accuracy};
+    const avg=(d.retrieval_precision+d.retrieval_recall+d.answer_faithfulness+d.citation_accuracy)/4;
+    const st=avg>=90?'enterprise_ready':avg>=80?'ready_minor':avg>=70?'conditional':avg>=60?'needs_remediation':'not_ready';
+    const rows=(data.per_query||[]).map(q=>`<div class="hit"><div class="meta">
+      <span>P ${q.precision}</span><span>R ${q.recall}</span><span>F ${q.faithfulness}</span>
+      <span>C ${q.citation_accuracy}</span><span>→ docs ${q.retrieved.join(', ')||'—'}</span></div>
+      <div class="snip">${esc(q.query)}</div></div>`).join('');
+    $('#b-out').innerHTML=scorecard(avg,st,cats)+rows;
+  }catch(e){ $('#b-out').innerHTML=`<div class="banner err">${esc(e.message)}</div>`; }
+  busy(btn,false,'Run benchmark');
+};
+
+// Dashboard is the starting page — load it on open.
+loadDashboard();
+</script>
+</body>
+</html>
