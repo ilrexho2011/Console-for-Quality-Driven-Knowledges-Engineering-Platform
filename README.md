@@ -12,6 +12,8 @@ Single-user (admin) — no auth, no role tiers.
 
 ## Architecture
 
+<img width="1685" height="945" alt="image" src="https://github.com/user-attachments/assets/b5746a0c-e56d-4210-9446-422ac3ce3299" />
+
 ```text
 platform_a/   parser.py     metadata + headings + canonical SHA-256 signature
               chunker.py    heading-aware chunking + 8-signal section_type
