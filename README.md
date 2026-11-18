@@ -84,7 +84,7 @@ pip install psycopg2-binary sentence-transformers anthropic
 python -m orchestrator.server
 # open http://127.0.0.1:8800  (health check: /health)
 ```
-<img width="1888" height="904" alt="image" src="https://github.com/user-attachments/assets/60499cee-2a82-4cc5-8e49-307ed3e3ee16" />
+<img width="1888" height="900" alt="image" src="https://github.com/user-attachments/assets/17dea85d-f02d-410b-8dde-b3e7b344181d" />
 
 The embedding model (`all-MiniLM-L6-v2`, 384-dim) downloads on first use and runs
 fully local thereafter — no embedding API cost.
