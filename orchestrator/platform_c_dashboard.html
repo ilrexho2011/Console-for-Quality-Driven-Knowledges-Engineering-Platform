@@ -3,602 +3,2284 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>QDKEP Knowledge Console</title>
+<title>QDKEP Control — Quality-Driven Knowledge Engineering</title>
 <style>
   :root{
-    --ink:#14181f; --panel:#1b212b; --line:#2b3340; --mut:#8a93a3;
-    --paper:#f3f1ea; --card:#ffffff; --soft:#e9e6dd; --softer:#f7f5ef;
-    --accent:#c2511f; --accent-d:#8f3a14; --ok:#2f7d54; --warn:#9a7314; --bad:#a3322b;
-    --mono:"SFMono-Regular",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
-    --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --bg:#0a1019; --panel:#111a28; --panel-2:#16202f; --line:#1f2d3f;
+    --line-soft:#19283a;
+    --ink:#eef3f8; --muted:#7f93a8; --faint:#566578;
+    --teal:#34d399; --teal-dim:#1f6b54; --amber:#f2c14e; --red:#fb7185;
+    --lime:#b6e84f; --blue:#5aa0e6; --mono:'SF Mono',ui-monospace,'Roboto Mono',monospace;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
-    font-size:15px;line-height:1.55}
-  header{background:var(--ink);color:var(--paper);padding:18px 28px;
-    display:flex;align-items:baseline;gap:18px;border-bottom:3px solid var(--accent)}
-  header .mark{font-family:var(--mono);font-weight:600;letter-spacing:.06em;font-size:18px}
-  header .sub{color:#aeb6c3;font-size:13px;font-family:var(--mono)}
-  header .who{margin-left:auto;font-size:12px;color:#aeb6c3;font-family:var(--mono)}
-  nav{display:flex;gap:2px;padding:0 28px;background:var(--ink)}
-  nav button{background:transparent;border:0;color:#aeb6c3;font-family:var(--mono);
-    font-size:13px;padding:11px 16px;cursor:pointer;border-bottom:2px solid transparent}
-  nav button:hover{color:var(--paper)}
-  nav button.on{color:var(--paper);border-bottom-color:var(--accent)}
-  main{max-width:980px;margin:0 auto;padding:30px 28px 80px}
-  .tab{display:none}.tab.on{display:block}
-  h1{font-size:22px;font-weight:600;margin:0 0 4px}
-  .lede{color:#5b6472;font-size:14px;margin:0 0 22px}
-  label{display:block;font-family:var(--mono);font-size:12px;letter-spacing:.04em;
-    color:#5b6472;text-transform:uppercase;margin:14px 0 6px}
-  textarea,input,select{width:100%;font-family:var(--mono);font-size:13px;
-    background:var(--card);border:1px solid #d8d4c8;border-radius:6px;padding:10px 12px;color:var(--ink)}
-  textarea{min-height:180px;resize:vertical;line-height:1.5}
-  .row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-  .row.two{grid-template-columns:1fr 1fr}
-  button.go{margin-top:18px;background:var(--accent);color:#fff;border:0;border-radius:6px;
-    font-family:var(--mono);font-size:13px;letter-spacing:.04em;padding:11px 22px;cursor:pointer}
-  button.go:hover{background:var(--accent-d)}
-  button.go:disabled{opacity:.5;cursor:default}
-  .out{margin-top:24px}
-  .scorecard{display:flex;align-items:stretch;gap:0;border:1px solid #d8d4c8;border-radius:8px;
-    overflow:hidden;background:var(--card)}
-  .scorecard .big{padding:20px 26px;min-width:150px;display:flex;flex-direction:column;
-    justify-content:center;border-right:1px solid var(--soft)}
-  .scorecard .big .num{font-family:var(--mono);font-size:42px;font-weight:600;line-height:1}
-  .scorecard .big .st{font-family:var(--mono);font-size:11px;letter-spacing:.05em;
-    text-transform:uppercase;margin-top:8px}
-  .scorecard .bars{flex:1;padding:16px 22px;display:flex;flex-direction:column;justify-content:center;gap:9px}
-  .bar{display:grid;grid-template-columns:160px 1fr 46px;align-items:center;gap:10px;
-    font-family:var(--mono);font-size:11px;color:#5b6472}
-  .bar .track{height:7px;background:var(--soft);border-radius:4px;overflow:hidden}
-  .bar .fill{height:100%;background:var(--accent);border-radius:4px}
-  .bar .val{text-align:right;color:var(--ink)}
-  .st.s-enterprise_ready{color:var(--ok)} .st.s-ready_minor{color:var(--ok)}
-  .st.s-conditional{color:var(--warn)} .st.s-needs_remediation{color:var(--warn)}
-  .st.s-not_ready,.st.s-rejected,.st.s-duplicate{color:var(--bad)}
-  .num.s-enterprise_ready,.num.s-ready_minor{color:var(--ok)}
-  .num.s-conditional,.num.s-needs_remediation{color:var(--warn)}
-  .num.s-not_ready{color:var(--bad)}
-  .issues{margin-top:16px;border-left:3px solid var(--warn);background:#fbf6e9;
-    padding:12px 16px;font-family:var(--mono);font-size:12px;color:#6b5a1f}
-  .issues ul{margin:6px 0 0;padding-left:18px}
-  .banner{padding:12px 16px;border-radius:6px;font-family:var(--mono);font-size:13px;margin-top:20px}
-  .banner.ok{background:#e7f1ea;color:var(--ok);border-left:3px solid var(--ok)}
-  .banner.err{background:#f6e8e6;color:var(--bad);border-left:3px solid var(--bad)}
-  .hit{border:1px solid #d8d4c8;border-radius:7px;background:var(--card);
-    padding:13px 16px;margin-top:10px}
-  .hit .meta{font-family:var(--mono);font-size:11px;color:var(--mut);
-    display:flex;gap:14px;flex-wrap:wrap;margin-bottom:6px}
-  .hit .meta .tag{color:var(--accent-d)}
-  .hit .snip{font-size:13px;color:#36404f}
-  .answer{border:1px solid #d8d4c8;border-radius:8px;background:var(--card);padding:18px 22px}
-  .answer .body{font-size:15px;line-height:1.7;white-space:pre-wrap}
-  .cites{margin-top:14px;border-top:1px solid var(--soft);padding-top:12px;
-    font-family:var(--mono);font-size:11px;color:var(--mut);display:flex;gap:8px;flex-wrap:wrap}
-  .cites .c{background:var(--softer);border:1px solid var(--soft);border-radius:4px;padding:3px 8px}
-  .hint{font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:6px}
-  .dropzone{display:flex;align-items:center;gap:18px;border:1.5px dashed #c8c2b2;
-    border-radius:10px;background:var(--softer);padding:20px 22px;margin-top:8px;
-    transition:border-color .15s,background .15s}
-  .dropzone.drag{border-color:var(--accent);background:#f6ece4}
-  .dropzone strong{display:block;font-size:14px;color:#3a4250}
-  .dropzone .dz-sub{display:block;font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:3px}
-  .dropzone .browse{margin-left:auto;background:var(--ink);color:var(--paper);border:0;
-    border-radius:6px;font-family:var(--mono);font-size:12px;padding:9px 16px;cursor:pointer}
-  .dropzone .browse:hover{background:#222a36}
-  .chunkcfg{margin-top:20px;border:1px solid var(--soft);border-radius:8px;
-    background:var(--card);padding:14px 18px 18px}
-  .chunkcfg .cc-head{font-family:var(--mono);font-size:12px;letter-spacing:.05em;
-    text-transform:uppercase;color:var(--accent-d);margin-bottom:4px}
-  .cc-hint{font-family:var(--mono);font-size:11px;color:var(--mut)}
-  .ix-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:6px 0 26px}
-  .ix-card{border:1px solid #d8d4c8;border-radius:8px;background:var(--card);padding:16px 18px}
-  .ix-card .name{font-family:var(--mono);font-size:11px;color:var(--mut);margin-bottom:8px;
-    word-break:break-all}
-  .ix-card .pts{font-size:30px;font-weight:600;line-height:1}
-  .ix-card .pts small{font-size:13px;font-weight:400;color:var(--mut);margin-left:4px}
-  table.ix{width:100%;border-collapse:collapse;font-size:13px;background:var(--card);
-    border:1px solid #d8d4c8;border-radius:8px;overflow:hidden}
-  table.ix th{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;
-    color:var(--mut);text-align:left;padding:11px 16px;background:var(--softer);border-bottom:1px solid var(--soft)}
-  table.ix td{padding:11px 16px;border-bottom:1px solid var(--soft);font-family:var(--mono)}
-  table.ix td.r,table.ix th.r{text-align:right}
-  table.ix tr:last-child td{border-bottom:0}
-  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:0}
-  .dot.green{background:var(--ok)} .dot.empty{background:var(--mut)}
-  .subtabs{display:flex;gap:24px;border-bottom:1px solid var(--soft);margin:0 0 18px}
-  .subtab{background:0;border:0;border-bottom:2px solid transparent;color:var(--mut);
-    font-family:var(--mono);font-size:13px;padding:8px 2px;cursor:pointer;margin-bottom:-1px}
-  .subtab.on{color:var(--accent);border-bottom-color:var(--accent)}
-  .subpane{display:none}.subpane.on{display:block}
-  .dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;margin-bottom:14px}
-  .dash-cell{border:1px solid #d8d4c8;border-radius:8px;background:var(--card);padding:14px 16px}
-  .dash-cell .k{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--mut)}
-  .dash-cell .v{font-size:30px;font-weight:600;margin-top:6px;line-height:1}
-  .dash-section{font-family:var(--mono);font-size:12px;letter-spacing:.05em;text-transform:uppercase;
-    color:var(--accent-d);margin:22px 0 10px}
-  .doc{border:1px solid #d8d4c8;border-radius:8px;background:var(--card);margin-top:10px;overflow:hidden}
-  .doc .row-h{display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer}
-  .doc .row-h:hover{background:var(--softer)}
-  .doc .row-h .fn{font-family:var(--mono);font-size:13px;color:#2a3240;flex:1;word-break:break-all}
-  .doc .row-h .chev{color:var(--mut);font-family:var(--mono)}
-  .pill{font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;
-    padding:3px 8px;border-radius:4px;background:var(--soft);color:#525b6a}
-  .pill.s-indexed{background:#e3efe8;color:var(--ok)} .pill.s-draft{background:#eee;color:#525b6a}
-  .pill.s-rejected{background:#f4e3e1;color:var(--bad)}
-  .doc .detail{display:none;border-top:1px solid var(--soft);padding:16px}
-  .doc.open .detail{display:block}
-  .dtabs{display:flex;gap:18px;border-bottom:1px solid var(--soft);margin-bottom:14px}
-  .dtab{background:0;border:0;border-bottom:2px solid transparent;color:var(--mut);
-    font-family:var(--mono);font-size:12px;padding:6px 2px;cursor:pointer;margin-bottom:-1px}
-  .dtab.on{color:var(--accent);border-bottom-color:var(--accent)}
-  .dpane{display:none}.dpane.on{display:block}
-  .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 28px;font-size:13px}
-  .meta-grid .m{display:flex;gap:8px}
-  .meta-grid .m .ml{font-family:var(--mono);font-size:11px;color:var(--mut);min-width:96px;text-transform:uppercase;letter-spacing:.03em}
-  .meta-grid .m .mv{font-family:var(--mono);color:#2a3240;word-break:break-all}
-  .audit-row{font-family:var(--mono);font-size:12px;color:#525b6a;display:flex;gap:10px;
-    align-items:center;padding:5px 0}
-  .audit-row .ts{color:var(--ok)}
-  .del{margin-top:18px;border-top:1px solid var(--soft);padding-top:14px;display:flex;
-    align-items:center;gap:12px}
-  .del label{margin:0;text-transform:none;letter-spacing:0;color:#525b6a;display:flex;align-items:center;gap:7px}
-  .del button{margin-left:auto;background:#fff;border:1px solid var(--bad);color:var(--bad);
-    font-family:var(--mono);font-size:12px;padding:8px 18px;border-radius:6px;cursor:pointer}
-  .del button:disabled{opacity:.4;cursor:default;border-color:#ccc;color:#999}
-  .del button:not(:disabled):hover{background:var(--bad);color:#fff}
-  .spin{display:inline-block;width:13px;height:13px;border:2px solid #ffffff60;
-    border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:7px}
-  @keyframes sp{to{transform:rotate(360deg)}}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6}
+  .app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+  /* sidebar */
+  .side{background:var(--panel);border-right:1px solid var(--line);padding:22px 0;position:sticky;top:0;height:100vh}
+  .brand{padding:0 22px 22px;border-bottom:1px solid var(--line)}
+  .brand .rca-logo{display:block;width:118px;height:auto;margin-bottom:12px}
+  .brand .logo{font-family:var(--mono);font-size:13px;letter-spacing:.5px;color:var(--lime)}
+  .brand .name{font-weight:600;font-size:18px;margin-top:4px}
+  .brand .sub{color:var(--muted);font-size:12px;margin-top:2px}
+  .nav{padding:14px 12px}
+  .nav button{width:100%;text-align:left;background:none;border:0;color:var(--muted);
+    padding:11px 14px;border-radius:8px;font-size:14px;cursor:pointer;display:flex;gap:10px;align-items:center}
+  .nav button:hover{background:var(--panel-2);color:var(--ink)}
+  .nav button.active{background:var(--panel-2);color:var(--lime)}
+  .nav .ix{font-family:var(--mono);font-size:11px;opacity:.6;width:18px}
+  .env{position:absolute;bottom:18px;left:22px;right:22px;font-size:12px;color:var(--muted)}
+  .env b{color:var(--teal);font-weight:500}
+  /* main — widened to fit more indicators per row */
+  main{padding:30px 40px;max-width:1680px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--lime);font-weight:600}
+  .head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px}
+  h1{font-size:24px;font-weight:600}
+  .head p{color:var(--muted);font-size:13px;margin-top:4px}
+  .pill{font-family:var(--mono);font-size:12px;padding:5px 12px;border-radius:20px;border:1px solid var(--line)}
+  .pill.ok{color:var(--teal);border-color:var(--teal-dim)}
+  .pill.warn{color:var(--amber);border-color:#5a4410}
+  .grid{display:grid;gap:16px}
+  .g6{grid-template-columns:repeat(6,1fr)}
+  .g5{grid-template-columns:repeat(5,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:1400px){.g6{grid-template-columns:repeat(4,1fr)}.g5{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:1000px){.g6,.g5,.g4{grid-template-columns:repeat(2,1fr)}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;position:relative;overflow:hidden}
+  /* coloured border in the colour of the metric the box presents (no left bar) */
+  .card.acc-red{border-color:rgba(251,113,133,.45)}
+  .card.acc-teal{border-color:rgba(52,211,153,.45)}
+  .card.acc-blue{border-color:rgba(90,160,230,.45)}
+  .card.acc-amber{border-color:rgba(242,193,78,.45)}
+  .card h3{font-size:12px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.6px}
+  .metric{font-family:var(--mono);font-size:37.5px;margin-top:8px;font-weight:700;letter-spacing:-.5px}
+  .metric.sm{font-size:27.5px}
+  .metric.amber{color:var(--amber)} .metric.red{color:var(--red)} .metric.teal{color:var(--teal)} .metric.blue{color:var(--blue)}
+  .trend{font-size:12px;color:var(--muted);margin-top:4px}
+  .bar{height:6px;background:var(--panel-2);border-radius:3px;overflow:hidden;margin-top:10px}
+  .bar > i{display:block;height:100%;background:var(--teal)}
+  .bar.warn > i{background:var(--amber)}
+  .bar.red > i{background:var(--red)}
+  section{display:none}
+  section.show{display:block}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:400;font-size:12px;text-transform:uppercase;letter-spacing:.3px}
+  td.mono,th.mono{font-family:var(--mono);font-size:13px}
+  .tag{font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:5px;background:var(--panel-2);color:var(--muted)}
+  .tag.rb{color:var(--blue)} .tag.kb{color:var(--teal)} .tag.doc{color:var(--amber)}
+  /* interface_inventory-only views hide the redundant Document ID column */
+  .hide-docid th:first-child, .hide-docid td:first-child{display:none}
+  /* animated "running" indicator for long-running actions (generate/benchmark/correct) */
+  .qk-run{display:inline-flex;gap:1px;vertical-align:middle;font-family:var(--mono)}
+  .qk-run i{font-style:normal;color:var(--teal);opacity:.2;animation:qkchev 1s infinite}
+  .qk-run i:nth-child(2){animation-delay:.15s}
+  .qk-run i:nth-child(3){animation-delay:.30s}
+  @keyframes qkchev{0%,100%{opacity:.2}50%{opacity:1}}
+  .score{font-family:var(--mono);font-weight:500}
+  .score.hi{color:var(--teal)} .score.mid{color:var(--amber)} .score.lo{color:var(--red)}
+  .row-actions button{background:var(--panel-2);border:1px solid var(--line);color:var(--ink);
+    font-size:12px;padding:5px 10px;border-radius:6px;cursor:pointer}
+  .row-actions button:hover{border-color:var(--teal-dim);color:var(--teal)}
+  .row-actions button.regen{border-color:var(--amber);color:var(--amber)}
+  .row-actions button.regen:hover{background:rgba(242,193,78,.08)}
+  .row-actions button.regen.live{border-color:var(--teal);color:var(--teal)}
+  .row-actions button.regen.down{border-color:var(--red);color:var(--red)}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+  .field label{font-size:13px;color:var(--muted)}
+  .field input,.field select{background:var(--panel-2);border:1px solid var(--line);color:var(--ink);
+    padding:10px 12px;border-radius:8px;font-size:14px;font-family:var(--mono)}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--teal-dim)}
+  .btn{background:var(--teal);color:#05241c;border:0;padding:11px 18px;border-radius:8px;
+    font-size:14px;font-weight:500;cursor:pointer}
+  .btn:hover{background:#36cdab}
+  .btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
+  .btn.ghost:hover{border-color:var(--teal-dim);color:var(--teal)}
+  .note{font-size:12px;color:var(--muted);margin-top:6px}
+  /* confirm dialog */
+  .overlay{position:fixed;inset:0;background:rgba(5,10,16,.7);display:none;align-items:center;justify-content:center;z-index:20}
+  .overlay.show{display:flex}
+  .dialog{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px;max-width:460px;width:90%}
+  .dialog h2{font-size:18px;font-weight:500;margin-bottom:10px}
+  .dialog p{color:var(--muted);font-size:14px;margin-bottom:8px}
+  .dialog .file{font-family:var(--mono);font-size:13px;color:var(--amber);background:var(--panel-2);
+    padding:8px 12px;border-radius:6px;margin:10px 0;word-break:break-all}
+  .dialog .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+  .run-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;
+    border:1px solid var(--line);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:all .15s}
+  .run-row:hover{border-color:var(--teal-dim);background:rgba(52,211,153,.05)}
+  .run-row .run-id{font-family:var(--mono);font-size:13px;color:var(--ink)}
+  .run-row .run-meta{font-size:11px;color:var(--muted);margin-top:3px}
+  .run-row .run-go{font-family:var(--mono);font-size:12px;color:var(--teal);white-space:nowrap}
+  .sev{font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:5px}
+  .sev.high{background:#3a1513;color:var(--red)} .sev.medium{background:#3a2c0c;color:var(--amber)}
+  .sev.low{background:#16202f;color:var(--muted)} .sev.critical{background:#3a1513;color:var(--red)}
+  .diag-title{font-size:13px;font-weight:600;color:var(--ink);border-top:1px solid var(--line);
+    padding-top:14px;margin-bottom:12px;letter-spacing:.02em}
+  .diag-card{border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:10px;
+    padding:14px 16px;margin-bottom:12px;background:var(--panel)}
+  .diag-head{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:14px}
+  .diag-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin-bottom:5px}
+  .diag-list{margin:0;padding-left:18px;font-size:13px;color:var(--muted);line-height:1.55}
+  .diag-list li{margin-bottom:4px}
+  .diag-foot{margin-top:10px;font-size:12px;color:var(--faint)}
+  .feed-item{border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:12px;background:var(--panel)}
+  .feed-item h4{font-family:var(--mono);font-size:14px;font-weight:500;margin-bottom:6px}
+  .feed-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .btn.ghost.fb-apply{font-size:11px;padding:5px 11px;white-space:nowrap}
+  .btn.ghost.fb-apply.down,.btn.ghost.down{border-color:var(--red);color:var(--red)}
+  .btn.ghost.fb-apply.live,.btn.ghost.live{border-color:var(--teal);color:var(--teal)}
+  .hint{font-size:13px;color:var(--muted);margin-top:8px}
+  .hint code{font-family:var(--mono);color:var(--teal);background:var(--panel-2);padding:1px 6px;border-radius:4px}
+  .src{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--muted)}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--teal)}
+  .dot.live{background:var(--teal);box-shadow:0 0 0 3px rgba(43,184,153,.18)}
+  .dot.local{background:var(--blue)}
+  .dot.down{background:var(--red)}
+  .systile{border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:var(--panel-2)}
+  .systile .sys-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px}
+  .systile .sys-name{font-size:15px;font-weight:600;color:var(--ink)}
+  .systile .sys-sid{font-family:var(--mono);font-size:11px;color:var(--faint);margin-left:8px}
+  .systile .sys-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .mcell{border:1px solid var(--line);border-radius:10px;padding:11px 13px;position:relative;overflow:hidden}
+  /* coloured border in the colour of the metric (no left accent bar) */
+  .mcell.c-red{border-color:rgba(251,113,133,.4)}
+  .mcell.c-teal{border-color:rgba(52,211,153,.4)}
+  .mcell.c-blue{border-color:rgba(90,160,230,.4)}
+  .mcell.c-amber{border-color:rgba(242,193,78,.4)}
+  .systile .sm-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .systile .sm-val{font-family:var(--mono);font-size:24px;margin-top:3px;font-weight:700;letter-spacing:-.5px}
+  .systile .sm-val.fail{color:var(--red)} .systile .sm-val.ok{color:var(--teal)} .systile .sm-val.warnv{color:var(--amber)} .systile .sm-val.blue{color:var(--blue)}
+  /* status badge like the Executive dashboard "Connected" pills */
+  .statebadge{font-family:var(--mono);font-size:11px;letter-spacing:.5px;padding:5px 11px;border-radius:8px;border:1px solid var(--line);white-space:nowrap}
+  .statebadge.live{color:var(--teal);border-color:var(--teal-dim);background:rgba(52,211,153,.06)}
+  .statebadge.local{color:var(--blue);border-color:#27456a;background:rgba(90,160,230,.06)}
+  .statebadge.down{color:var(--red);border-color:#5a2730;background:rgba(251,113,133,.06)}
+  .sys-head-right{display:flex;align-items:center;gap:10px}
+  .invbtn{font-family:var(--mono);font-size:11px;letter-spacing:.4px;padding:5px 11px;border-radius:8px;
+    border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .15s}
+  .invbtn:hover:not(:disabled){border-color:var(--teal-dim);color:var(--teal)}
+  .invbtn:disabled{opacity:.7;cursor:default}
+  .invbtn.live{color:var(--teal);border-color:var(--teal-dim)}
+  .invbtn.down{color:var(--red);border-color:#5a2730}
+  /* APIM/PIPO extended detail */
+  .extras{margin-top:14px;border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:12px}
+  .extras .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+  .subcard{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:13px 15px}
+  .subhead{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:8px;font-weight:600}
+  .subcard .big{font-family:var(--mono);font-size:28px;font-weight:700;letter-spacing:-.5px}
+  .subcard .big.ok{color:var(--teal)}
+  .kv{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-top:1px solid var(--line-soft)}
+  .kv b{font-family:var(--mono)} .kv b.ok{color:var(--teal)} .kv b.fail{color:var(--red)} .kv b.warnv{color:var(--amber)}
+  table.mini{width:100%;border-collapse:collapse;font-size:13px}
+  table.mini th{color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.4px;padding:6px 8px;border-bottom:1px solid var(--line)}
+  table.mini td{padding:6px 8px;border-bottom:1px solid var(--line-soft)}
+  table.mini td.mono{font-family:var(--mono);font-size:12px}
+  /* when a list exceeds 10 rows, cap the body height and scroll (header stays) */
+  .mini-wrap.mini-scroll{max-height:340px;overflow-y:auto}
+  .mini-wrap.mini-scroll table.mini thead th{position:sticky;top:0;background:var(--panel);z-index:1}
+  .mini-wrap.mini-scroll::-webkit-scrollbar{width:8px}
+  .mini-wrap.mini-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+  .mini-wrap.mini-scroll::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+  /* S4H detail gadget: scroll on BOTH axes (columns readable horizontally,
+     rows capped vertically) with a sticky header. */
+  .mini-wrap.dual-scroll{max-height:340px;overflow:auto}
+  .mini-wrap.dual-scroll table.mini{min-width:820px}
+  .mini-wrap.dual-scroll table.mini thead th{position:sticky;top:0;background:var(--panel);z-index:1}
+  .mini-wrap.dual-scroll td.wide{white-space:nowrap;max-width:none}
+  .mini-wrap.dual-scroll::-webkit-scrollbar{width:8px;height:8px}
+  .mini-wrap.dual-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+  .mini-wrap.dual-scroll::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+  /* per-card monitor status dot (soft 'degraded' signal, never a global alarm) */
+  .sdot{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:middle;flex:none}
+  .sdot.ok{background:var(--teal)}
+  .sdot.deg{background:#f2c14e}
+  .sdot.err{background:var(--red)}
+  /* S4H card header: status dot on the LEFT, label + transaction chip at the
+     same (larger, brighter) size for readability. */
+  .systile .sm-label .s4h-head{display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .systile .sm-label .s4h-txt{font-size:12.5px;color:var(--ink);font-weight:600}
+  .systile .sm-label .s4h-tc{font-size:12.5px;color:var(--blue);font-weight:700;font-family:var(--mono)}
 </style>
 </head>
 <body>
-<header>
-  <span class="mark">QDKEP</span>
-  <span class="sub">Knowledge Console · testing system</span>
-  <span class="who">admin · single-user</span>
-</header>
-<nav>
-  <button data-t="dashboard" class="on">dashboard</button>
-  <button data-t="upload">upload</button>
-  <button data-t="indexes">indexes</button>
-  <button data-t="documents">documents</button>
-  <button data-t="search">search</button>
-  <button data-t="answer">answer</button>
-  <button data-t="benchmark">benchmark</button>
-</nav>
-<main>
-
-  <section id="dashboard" class="tab on">
-    <h1>Dashboard</h1>
-    <div class="subtabs">
-      <button class="subtab on" data-s="ov">Overview</button>
-      <button class="subtab" data-s="ans">Answer</button>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <img class="rca-logo" alt="RealCore Albania" src="data:image/png;base64,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">
+      <div class="logo">QDKEP // v16.0</div>
+      <div class="name">Control Room</div>
+      <div class="sub">Quality-Driven Knowledge Engineering</div>
     </div>
+    <nav class="nav" id="nav">
+      <button class="active" data-s="monitoring"><span class="ix">01</span> Monitoring</button>
+      <button data-s="scenario"><span class="ix">02</span> Scenario Lab</button>
+      <button data-s="generation"><span class="ix">03</span> Generation</button>
+      <button data-s="benchmark"><span class="ix">04</span> Benchmark</button>
+      <button data-s="feedback"><span class="ix">05</span> Feedback</button>
+      <button data-s="packages"><span class="ix">06</span> Packages</button>
+    </nav>
+    <div class="env">Environment <b>demo</b><br>Customer <b>RCA</b></div>
+  </aside>
 
-    <div id="sub-ov" class="subpane on">
-      <p class="lede">Platform overview and health status.</p>
-      <div id="dash-cards"></div>
-    </div>
-
-    <div id="sub-ans" class="subpane">
-      <p class="lede">Generate an AMS-oriented answer based on indexed knowledge.</p>
-      <label for="da-q">Question</label>
-      <textarea id="da-q" style="min-height:90px" placeholder="What should an AMS consultant check first for a CPI health issue?"></textarea>
-      <div class="row">
-        <div><label>customer_id</label><input id="da-cust"></div>
-        <div><label>system_id</label><input id="da-sys"></div>
-        <div><label>artifact_type</label><input id="da-art"></div>
-        <div><label>top_k</label><input id="da-k" type="number" value="3" min="1" max="20"></div>
-      </div>
-      <button class="go" id="da-go">Generate answer</button>
-      <div class="out" id="da-out"></div>
-    </div>
-  </section>
-
-  <section id="upload" class="tab">
-    <h1>Upload knowledge document</h1>
-    <p class="lede">Drop or browse a .md / .txt artifact — it loads automatically.
-      The console scores it, blocks duplicates by canonical signature, then chunks and indexes it.</p>
-
-    <div id="drop" class="dropzone">
-      <div>
-        <strong>Drag &amp; drop a document here</strong>
-        <span class="dz-sub">or browse · .md .txt · the filename and text fill in automatically</span>
-      </div>
-      <button type="button" class="browse" id="browse-btn">Browse files</button>
-      <input type="file" id="file-in" accept=".md,.txt,.markdown" hidden>
-    </div>
-
-    <label for="up-name">Filename</label>
-    <input id="up-name" placeholder="RB_RCMO_CPI_ODATA_404_P2_v1.md" value="RB_RCMO_CPI_DEMO_P2_v1.md">
-    <label for="up-text">Document (markdown)</label>
-    <textarea id="up-text" placeholder="# Title&#10;&#10;environment: &quot;demo&quot;&#10;customer_id: &quot;RCMO&quot;&#10;..."></textarea>
-
-    <div class="chunkcfg">
-      <div class="cc-head">Chunk configuration</div>
-      <div class="row">
+  <main>
+    <!-- 01 MONITORING -->
+    <section class="show" id="monitoring">
+      <div class="head">
         <div>
-          <label for="cc-mode">Chunk mode</label>
-          <select id="cc-mode">
-            <option value="bm25_typed">bm25_typed</option>
-            <option value="procedure">procedure</option>
-            <option value="paragraph">paragraph</option>
-            <option value="fixed">fixed</option>
+          <div class="eyebrow">Quality-Driven Knowledge Engineering Platform</div>
+          <h1>Integration monitoring</h1>
+          <p>SAP CPI, PI/PO and S/4HANA signals — live and local MPL (APIM and AEM are CPI sub-sources)</p>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="btn ghost" id="m-refresh" onclick="refreshConnections()">↻ Refresh sources</button>
+          <span class="pill ok" id="m-sources">0 sources connected</span>
+        </div>
+      </div>
+      <div class="grid g4">
+        <div class="card acc-red"><h3>Failed messages (24h)</h3><div class="metric red" id="m-failed">0</div>
+          <div class="trend">first-seen captured to monthly store</div></div>
+        <div class="card acc-teal"><h3>Completed (24h)</h3><div class="metric teal" id="m-completed">0</div>
+          <div class="trend" id="m-completed-sub">across connected systems</div></div>
+        <div class="card acc-blue"><h3>Systems watched</h3><div class="metric blue" id="m-interfaces">0</div>
+          <div class="trend" id="m-interfaces-sub">across platforms</div></div>
+        <div class="card acc-amber"><h3>Error patterns</h3><div class="metric amber" id="m-patterns">0</div>
+          <div class="trend">distinct, eligible for KB+RB</div></div>
+      </div>
+
+      <!-- KB+RB eligibility breakdown: why patterns are (not) candidates. Sourced
+           from generation.ineligibility_reasons — advisory, no governed writes. -->
+      <div id="m-eligibility" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center"></div>
+
+      <!-- per-system monitoring tiles (one styled row per connected system) -->
+      <div class="card" style="margin-top:16px">
+        <h3>Connected systems</h3>
+        <div class="note" id="sys-empty" style="margin-top:8px">No systems connected yet — click <b>Refresh sources</b> after filling <code>.env</code>.</div>
+        <div id="sys-tiles" style="margin-top:12px;display:flex;flex-direction:column;gap:12px"></div>
+      </div>
+
+      <!-- MPL Archive loader + unified Error Corpus. Positioned BELOW Connected
+           systems so the live monitoring data leads the page. Selecting archive
+           months folds mpl_MM_YYYY.json into the signature-keyed corpus so the
+           Error patterns tile reflects real diversity across runs + archive. -->
+      <div class="card" id="mpl-archive-card" style="margin-top:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <h3>Error corpus &amp; MPL archive</h3>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="note" id="corpus-sub" style="color:var(--muted)">runs only</span>
+            <button class="btn ghost" id="corpus-sync" onclick="syncArchive()" title="Pull live FAILED MPL into the monthly archive store">⤓ Sync archive</button>
+            <button class="btn ghost" id="corpus-load" onclick="reloadWithMonths()">↺ Load &amp; analyze</button>
+          </div>
+        </div>
+        <div class="note" style="margin-top:6px;color:var(--faint)">Select archive months to include in the pattern analysis:</div>
+        <div id="mpl-archive-months" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px"></div>
+        <div style="max-height:240px;overflow-y:auto;margin-top:12px">
+          <table>
+            <thead><tr style="position:sticky;top:0;background:#0e1626">
+              <th>Family</th><th>Taxonomy</th><th class="mono">Count</th>
+              <th class="mono">Interfaces</th><th>Sources</th><th class="mono">Last seen</th></tr></thead>
+            <tbody id="corpus-rows"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h3>Sources</h3>
+        <table style="margin-top:10px">
+          <thead><tr><th>Source</th><th class="mono">SID</th><th>Mode</th><th>Window</th><th class="mono">New failed</th><th>Store file</th></tr></thead>
+          <tbody id="src-rows">
+            <tr><td class="empty" colspan="6" style="color:var(--faint);padding:10px">No sources probed yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 02 SCENARIO LAB -->
+    <section id="scenario">
+      <div class="head">
+        <div>
+          <div class="eyebrow">Quality-Driven Knowledge Engineering Platform</div>
+          <h1>Scenario Lab</h1>
+          <p>Preliminary material harvesting — staging that seeds atomic KB-RB generation (one error → one pair)</p>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="btn ghost" onclick="loadScenario()">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="grid" style="grid-template-columns:240px 1fr;gap:16px">
+        <div class="card">
+          <h3>Source system</h3>
+          <div id="scn-sources" style="margin-top:10px;display:flex;flex-direction:column;gap:4px"></div>
+          <h3 style="margin-top:18px">Harvest</h3>
+          <div id="scn-modes" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px"></div>
+          <label class="note" style="display:block;margin-top:14px">Local export path (optional)
+            <input id="scn-local" type="text" list="scn-recent" placeholder="tests/fixtures/cpi/mpl_sample.json"
+              style="width:100%;margin-top:6px;padding:7px;background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--ink);font-family:inherit;font-size:12px"></label>
+          <label class="note" style="display:block;margin-top:10px">CPIView SQLite (optional, CPI)
+            <input id="scn-cpiview" type="text" list="scn-recent" placeholder="CPIView/output/cpiview.sqlite"
+              style="width:100%;margin-top:6px;padding:7px;background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--ink);font-family:inherit;font-size:12px"></label>
+          <datalist id="scn-recent"></datalist>
+          <button class="btn" style="width:100%;margin-top:12px" onclick="pullMaterial(this)">Pull material</button>
+          <button class="btn ghost" style="width:100%;margin-top:8px" id="scn-corpus-btn" onclick="harvestFromCorpus(this)"
+            title="Pipe the unified Error Corpus (runs + MPL archive) into atomic candidates, joined to interface_inventory and flagged against existing KEDB/RB">⤓ Harvest from corpus</button>
+          <div id="scn-corpus-note" class="note" style="color:var(--faint);margin-top:6px"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="grid g4">
+            <div class="card acc-blue"><h3>Objects staged</h3><div class="metric blue" id="scn-objects">—</div><div class="trend">per-system store</div></div>
+            <div class="card acc-amber"><h3>Errors captured</h3><div class="metric amber" id="scn-errors">0</div><div class="trend">FAILED, deduped</div></div>
+            <div class="card acc-red"><h3>New (first-seen)</h3><div class="metric red" id="scn-new">0</div><div class="trend">first time for system</div></div>
+            <div class="card acc-teal"><h3>Atomic pairs</h3><div class="metric teal" id="scn-pairs">0</div><div class="trend">one per signature</div></div>
+          </div>
+          <div class="card acc-red">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+              <h3 style="margin:0">New errors — first seen for <span id="scn-sys-label" class="mono">—</span></h3>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span id="scn-group-note" class="note" style="color:var(--faint)"></span>
+                <button class="btn" id="scn-generate-group" onclick="generateGroup(this)"
+                  title="Generate all atomic KB-RB pairs as one group, systemized into a RUN-xxxx folder">⚙ Generate Group</button>
+              </div>
+            </div>
+            <table style="margin-top:10px">
+              <thead><tr><th>Interface</th><th>Exception</th><th>Error</th><th class="mono">Date / time</th><th></th></tr></thead>
+              <tbody id="scn-err-rows"><tr><td class="empty" colspan="5" style="color:var(--faint);padding:10px">No errors yet — Pull material to discover first-seen errors</td></tr></tbody>
+            </table>
+          </div>
+          <div class="card">
+            <h3>Atomic KB-RB candidates <span class="mono" style="color:var(--teal);font-size:12px">status = new</span></h3>
+            <table style="margin-top:10px">
+              <thead><tr><th>Interface</th><th>Family</th><th class="mono">Count</th><th>Priority</th><th>Inventory</th><th>Status</th></tr></thead>
+              <tbody id="scn-pair-rows"><tr><td class="empty" colspan="6" style="color:var(--faint);padding:10px">No candidates queued yet</td></tr></tbody>
+            </table>
+          </div>
+
+          <!-- Signals Evidence (F1): System ▸ Package ▸ iFlow ▸ Case drill-down.
+               Shows the current failed/success evidence per iFlow and whether it
+               is generation-ready (>=2 FAILED & >=1 SUCCESS). Read-only. -->
+          <div class="card acc-blue">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+              <h3 style="margin:0">Signals Evidence <span class="note" style="color:var(--faint)">System ▸ Package ▸ iFlow ▸ Case</span></h3>
+              <button class="btn ghost" onclick="loadEvidence()">↻ Reload evidence</button>
+            </div>
+            <div class="grid" style="grid-template-columns:1fr 1fr 1.5fr;gap:12px;margin-top:12px">
+              <div>
+                <div class="note" style="color:var(--faint);margin-bottom:6px">Package</div>
+                <div id="ev-packages" style="display:flex;flex-direction:column;gap:4px;max-height:230px;overflow-y:auto"></div>
+              </div>
+              <div>
+                <div class="note" style="color:var(--faint);margin-bottom:6px">iFlow <span title="green = generation-ready · amber = has 2+ failed · red = insufficient">ⓘ</span></div>
+                <div id="ev-iflows" style="display:flex;flex-direction:column;gap:4px;max-height:230px;overflow-y:auto"></div>
+              </div>
+              <div>
+                <div id="ev-case-tabs" style="display:flex;gap:6px;align-items:center;margin-bottom:8px"></div>
+                <div id="ev-samples" style="max-height:230px;overflow-y:auto"></div>
+              </div>
+            </div>
+            <div id="ev-empty" class="note" style="color:var(--faint);margin-top:8px">No evidence yet — Pull material with a local MPL export to capture FAILED + COMPLETED signals.</div>
+          </div>
+
+          <!-- Case Prediction — Test Matrix (F3): predicted negative (>=5 when
+               design allows) + positive configs+payloads per iFlow, for MANUAL
+               execution in SAP CI. Payloads from real CPIView XSD when available. -->
+          <div class="card acc-amber">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+              <h3 style="margin:0">Case Prediction — Test Matrix <span class="note" style="color:var(--faint)">negative ≥5 (when design allows) + positive · run manually in SAP CI</span></h3>
+              <div style="display:flex;gap:8px">
+                <button class="btn" id="pred-run" onclick="runPredict(this)">⚙ Predict test matrix</button>
+                <button class="btn ghost" onclick="exportPredictions()">⤓ Export</button>
+              </div>
+            </div>
+            <div id="pred-note" class="note" style="color:var(--faint);margin-top:6px"></div>
+            <div style="margin-top:10px">
+              <div style="max-height:240px;overflow:auto">
+                <table style="width:100%"><thead><tr><th style="width:70%">iFlow</th><th class="mono">Neg</th><th>≥5</th><th>Payload</th></tr></thead>
+                  <tbody id="pred-rows"><tr><td class="empty" colspan="4" style="color:var(--faint);padding:10px">No predictions yet — click Predict test matrix.</td></tr></tbody></table>
+              </div>
+              <div id="pred-detail" style="max-height:320px;overflow-y:auto;margin-top:12px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 GENERATION -->
+    <section id="generation">
+      <div class="head"><div><h1>Knowledge generation</h1><p>Generate atomic KB + RB pairs and catalog docs from error signals</p></div></div>
+      <div class="grid g2">
+        <div class="card">
+          <h3>Generation run</h3>
+          <div class="field" style="margin-top:14px">
+            <label>Source (by sap_sid)</label>
+            <select id="gen-source"><option value="CPI">CPI — refresh to load live sources</option></select>
+            <span class="note">Pick which system to generate from: CPI, PIPO, or the S/4HANA SID (sap_sid). APIM and AEM are generated under CPI.</span>
+          </div>
+          <div class="field">
+            <label>Document version</label>
+            <input id="gen-version" value="v1" spellcheck="false">
+            <span class="note">Default v1. Change to v2, v3 … for a new revision.</span>
+          </div>
+          <div class="field">
+            <label>Duplicate handling per type</label>
+            <select id="gen-dup"><option>Block duplicates (recommended)</option><option>Allow re-emit</option></select>
+          </div>
+          <div class="field">
+            <label>AI section enrichment</label>
+            <select id="gen-ai">
+              <option value="off">Off — deterministic (default)</option>
+              <option value="on">On — use the provider configured in .env</option>
+            </select>
+            <span class="note" id="gen-ai-note">When On, only the diagnostic sections (Root Cause, Diagnosis, Recovery) are AI-enriched from real evidence; metadata, IDs, titles and MPL evidence stay deterministic. Falls back to template bullets if no provider/key is configured.</span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <button class="btn" id="gen-inv-btn" onclick="runInventoryGeneration(this)"
+              title="Generate one interface_inventory doc per interface (P3): design from CPIView + MPL evidence">Generate interface_inventory_docs</button>
+            <button class="btn" id="gen-pairs-btn" onclick="runGeneration()">Generate atomic KB + RB pairs</button>
+          </div>
+          <div class="note" id="gen-status"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <!-- TOP: interface_inventory docs series (scrollable) -->
+          <div class="card" style="flex:1;display:flex;flex-direction:column">
+            <h3>Interface inventory docs</h3>
+            <div style="max-height:180px;overflow-y:auto;margin-top:12px">
+              <table>
+                <thead><tr style="position:sticky;top:0;background:#0e1626"><th>Interface</th><th>Output</th></tr></thead>
+                <tbody id="gen-inv-rows">
+                  <tr><td class="empty" colspan="2" style="color:var(--faint);padding:10px">Click “Generate interface_inventory_docs” to populate this list.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="note">One document per interface (artifact_type <span class="mono">interface_inventory</span>, priority <span class="mono">P3</span>) — Section 4 from CPIView design, Section 5 from MPL evidence.</div>
+          </div>
+          <!-- BOTTOM: atomic KB-RB pairs (scrollable) -->
+          <div class="card" style="flex:1;display:flex;flex-direction:column">
+            <h3>What will be produced</h3>
+            <div style="max-height:180px;overflow-y:auto;margin-top:12px">
+              <table>
+                <thead><tr style="position:sticky;top:0;background:#0e1626"><th>Error pattern</th><th class="mono">Pair ID</th><th>Outputs</th></tr></thead>
+                <tbody id="gen-pairs-rows">
+                  <tr><td class="mono">CPI_HTTP_404</td><td class="mono">-P2-5381</td><td><span class="tag kb">KB</span> <span class="tag rb">RB</span></td></tr>
+                  <tr><td class="mono">CPI_HTTP_401</td><td class="mono">-P2-1146</td><td><span class="tag kb">KB</span> <span class="tag rb">RB</span></td></tr>
+                  <tr><td class="mono">CPI_SAXPARSE…</td><td class="mono">-P2-8531</td><td><span class="tag kb">KB</span> <span class="tag rb">RB</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="note">Each error → one atomic KB+RB pair with the same numeric ID, cross-linked at the end of both documents.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- produced documents for the last generation run -->
+      <div class="card" id="gen-results-card" style="margin-top:16px;display:none">
+        <h3 id="gen-results-title">Generated documents</h3>
+        <table style="margin-top:12px">
+          <thead><tr><th class="mono">Document ID</th><th class="mono">File</th><th>Type</th><th class="mono">Version</th><th class="mono">Score</th><th></th></tr></thead>
+          <tbody id="gen-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 03 BENCHMARK -->
+    <section id="benchmark">
+      <div class="head">
+        <div><h1>Retrieval quality benchmark</h1><p id="bm-sub">Run-scoped readiness across seven weighted categories</p></div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span class="pill ok" id="bm-status">Enterprise Ready</span>
+          <span class="pill" id="bm-profile" style="display:none"></span>
+          <button class="btn ghost" id="bm-inv" onclick="openInvPicker()"
+            title="Select an independent INV inventory run to benchmark (adapted interface_inventory profile)">Select INV to benchmark</button>
+          <button class="btn ghost" id="bm-select" onclick="openRunPicker()">Select RUN to benchmark</button>
+        </div>
+      </div>
+      <div class="grid g4">
+        <div class="card"><h3>Overall readiness</h3><div class="metric" id="bm-overall">90</div><div class="trend">weighted score / 100</div></div>
+        <div class="card"><h3>Hit@3</h3><div class="metric sm" id="bm-hit3">1.00</div><div class="trend">MRR <span id="bm-mrr">1.00</span></div></div>
+        <div class="card"><h3>Context recall</h3><div class="metric sm" id="bm-recall">1.00</div><div class="trend">noise <span id="bm-noise">0.00</span></div></div>
+        <div class="card"><h3>Queries evaluated</h3><div class="metric sm" id="bm-q">32</div><div class="trend">title-divergent + dirty MPL</div></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3 id="cat-title">Category scores (weighted)</h3>
+        <div id="cat-bars" style="margin-top:14px"></div>
+        <div id="cat-diagnostics" style="margin-top:18px"></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3 id="perdoc-title">Per-document scores</h3>
+        <table style="margin-top:10px">
+          <thead><tr><th class="mono">Document ID</th><th>Type</th><th class="mono">Policy</th><th class="mono">BM25</th><th class="mono">Chunking</th><th></th></tr></thead>
+          <tbody id="doc-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 04 FEEDBACK -->
+    <section id="feedback">
+      <div class="head"><div><h1>Corrective feedback</h1><p>Regeneration hints only — governed documents are never rewritten in place</p></div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span class="pill ok" id="fb-decision">Promote</span>
+          <button class="btn ghost" id="fb-apply-group" onclick="applyFeedbackGroup(this)"
+            title="Correct every document below threshold, then re-run Regeneration → Benchmark → Feedback → Packages">Apply Corrective Feedback in Group</button>
+        </div></div>
+      <div class="card"><h3>Promotion decision</h3>
+        <p class="note" id="fb-summary" style="margin-top:8px"></p></div>
+      <div id="fb-list" style="margin-top:16px"></div>
+    </section>
+
+    <!-- 05 PACKAGES -->
+    <section id="packages">
+      <div class="head"><div><h1>Knowledge packages</h1><p>Generated artifacts in knowledge/RB, knowledge/KB, knowledge/DOC</p></div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span class="pill ok" id="pkg-run">no run</span>
+          <select id="pkg-type-filter" onchange="renderPackages()" title="Filter by artifact type">
+            <option value="all">All types</option>
+            <option value="runbook">RB — runbook</option>
+            <option value="kedb">KB — kedb</option>
+            <option value="doc">DOC — interface_inventory</option>
           </select>
-        </div>
-        <div>
-          <label for="cc-size">Chunk size (chars)</label>
-          <input id="cc-size" type="number" value="400" min="100" max="4000">
-        </div>
-        <div>
-          <label for="cc-overlap">Chunk overlap (chars)</label>
-          <input id="cc-overlap" type="number" value="80" min="0" max="1000">
-        </div>
-        <div style="display:flex;align-items:flex-end">
-          <span class="cc-hint" id="cc-hint">profile default: size 400 · overlap 80</span>
+          <button class="btn ghost" id="pkg-regen-group" onclick="regenerateGroup(this)"
+            title="Apply corrective feedback to every document below threshold, then re-run Regeneration → Benchmark → Feedback → Packages">Regenerate the Group</button>
+          <button class="btn ghost" id="pkg-zip" onclick="downloadZip()">⤓ Download .zip</button>
         </div>
       </div>
+      <div class="card">
+        <table>
+          <thead><tr><th class="mono">Document ID</th><th class="mono">File</th><th>Type</th><th class="mono">Version</th><th class="mono">Score</th><th></th></tr></thead>
+          <tbody id="pkg-rows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- document viewer -->
+<div class="overlay" id="doc-overlay">
+  <div class="dialog" style="max-width:760px;width:92%">
+    <h2 id="doc-title" style="font-family:var(--mono);font-size:15px">Document</h2>
+    <pre id="doc-body" style="max-height:60vh;overflow:auto;white-space:pre-wrap;
+      background:#0e1726;padding:14px;border-radius:8px;font-size:12.5px;
+      font-family:var(--mono);line-height:1.55;color:var(--muted)"></pre>
+    <div class="actions">
+      <button class="btn ghost" onclick="closeDoc()">Close</button>
+      <button class="btn" id="doc-dl" onclick="downloadDoc()">⤓ Download file</button>
     </div>
+  </div>
+</div>
 
-    <button class="go" id="up-go">Score &amp; index</button>
-    <div class="out" id="up-out"></div>
-  </section>
-
-  <section id="indexes" class="tab">
-    <h1>Vector indexes</h1>
-    <p class="lede">Collection status and vector index health, grouped by artifact type.
-      Points are indexed chunks; indexed vectors are chunks with a stored embedding.</p>
-    <div id="ix-cards" class="ix-cards"></div>
-    <div id="ix-table" class="out"></div>
-  </section>
-
-  <section id="documents" class="tab">
-    <h1>Documents</h1>
-    <p class="lede">Indexed and draft documents with metadata, quality scores, audit
-      trail and version history. Expand a row for detail; delete with confirmation.</p>
-    <div id="docs-count" class="hint"></div>
-    <div id="docs-list" class="out"></div>
-  </section>
-
-  <section id="search" class="tab">
-    <h1>Search knowledge</h1>
-    <p class="lede">Hybrid retrieval — semantic plus BM25 — reranked by the 8-signal engine.</p>
-    <label for="s-q">Query</label>
-    <input id="s-q" placeholder="XML parsing failed in CPI Groovy">
-    <div class="row">
-      <div><label>customer_id</label><input id="s-cust"></div>
-      <div><label>system_id</label><input id="s-sys"></div>
-      <div><label>artifact_type</label><input id="s-art" placeholder="kedb / runbook"></div>
-      <div><label>top_k</label><input id="s-k" type="number" value="5" min="1" max="20"></div>
+<!-- overwrite confirmation -->
+<div class="overlay" id="overlay">
+  <div class="dialog">
+    <h2>Overwrite existing document?</h2>
+    <p>This document already exists on disk. Overwriting replaces the current version. This cannot be undone.</p>
+    <div class="file" id="ov-file"></div>
+    <div class="actions">
+      <button class="btn ghost" onclick="closeOverlay()">Keep existing</button>
+      <button class="btn" onclick="confirmOverwrite()">Overwrite</button>
     </div>
-    <button class="go" id="s-go">Search</button>
-    <div class="out" id="s-out"></div>
-  </section>
+  </div>
+</div>
 
-  <section id="answer" class="tab">
-    <h1>Answer</h1>
-    <p class="lede">Grounded AMS answer generated only from indexed knowledge, with inline citations.</p>
-    <label for="a-q">Question</label>
-    <textarea id="a-q" style="min-height:90px" placeholder="How do I recover from XML parsing failed on the CPI Groovy step?"></textarea>
-    <div class="row">
-      <div><label>customer_id</label><input id="a-cust"></div>
-      <div><label>system_id</label><input id="a-sys"></div>
-      <div><label>artifact_type</label><input id="a-art"></div>
-      <div><label>top_k</label><input id="a-k" type="number" value="5" min="1" max="20"></div>
+<!-- RUN picker for benchmark -->
+<div class="overlay" id="run-overlay">
+  <div class="dialog" style="max-width:620px;width:92%">
+    <h2>Select a RUN to benchmark</h2>
+    <p class="note">Pick a <code>RUN-yyyymmdd-nnn</code> folder that already has generated
+      documents. Running the benchmark chains into Feedback and Packages.</p>
+    <div id="run-list" style="max-height:46vh;overflow:auto;margin-top:12px"></div>
+    <div class="actions">
+      <button class="btn ghost" onclick="closeRunPicker()">Cancel</button>
     </div>
-    <button class="go" id="a-go">Generate answer</button>
-    <div class="out" id="a-out"></div>
-  </section>
+  </div>
+</div>
 
-  <section id="benchmark" class="tab">
-    <h1>Benchmark</h1>
-    <p class="lede">Run a query-set with ground-truth relevant document ids to score
-      retrieval precision, recall, faithfulness and citation accuracy.</p>
-    <label for="b-set">Query-set (JSON array)</label>
-    <textarea id="b-set" placeholder='[{"query":"XML parsing failed","filters":{"customer_id":"RCMO"},"relevant_doc_ids":[1],"top_k":5}]'></textarea>
-    <p class="hint">Each entry: query, optional filters, relevant_doc_ids, top_k.</p>
-    <button class="go" id="b-go">Run benchmark</button>
-    <div class="out" id="b-out"></div>
-  </section>
+<!-- benchmark: display-existing vs retest chooser (for already-benchmarked runs) -->
+<div class="overlay" id="bench-mode-overlay">
+  <div class="dialog" style="max-width:560px;width:92%">
+    <h2 id="bench-mode-title">Benchmark</h2>
+    <p id="bench-mode-prompt" class="note" style="margin-top:8px">This run was already benchmarked. Will you display existing results or retest?</p>
+    <div class="actions" style="margin-top:18px">
+      <button class="btn ghost" onclick="resolveBenchMode(null)">Cancel</button>
+      <button class="btn ghost" onclick="resolveBenchMode('existing')" title="Show the saved benchmark / feedback / packages without recomputing">Display existing</button>
+      <button class="btn" onclick="resolveBenchMode('retest')" title="Re-run scoring from scratch and overwrite the saved benchmark">Retest</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="mode-overlay">
+  <div class="dialog" style="max-width:560px;width:92%">
+    <h2 id="mode-title">Apply corrective feedback</h2>
+    <p id="mode-prompt" class="note" style="margin-top:8px">Do you want to apply on the same version, or create a new version?</p>
+    <div class="actions" style="margin-top:18px">
+      <button class="btn ghost" onclick="resolveMode(null)">Cancel</button>
+      <button class="btn ghost" onclick="resolveMode('same')" title="Apply the correction on the same version and the same file — the filename stays the same (v1 stays v1), rewritten in place">Same version (Remediated)</button>
+      <button class="btn" onclick="resolveMode('new')" title="Create a new version (e.g. v1 → v2) with the correction applied">New version (Update v++)</button>
+    </div>
+  </div>
+</div>
 
-</main>
 <script>
-const $=s=>document.querySelector(s);
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
-  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('on'));
-  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
-  b.classList.add('on'); $('#'+b.dataset.t).classList.add('on');
-  if(b.dataset.t==='indexes') loadIndexes();
+// ---- data: live from server when available, else the embedded demo ----
+const DEMO = {
+  overall: 90, status: "Enterprise Ready",
+  categories: {policy_compliance:100, bm25_readiness:100, chunking_quality:99,
+    retrieval_precision:68, retrieval_recall:100, faithfulness:90, citation_accuracy:61},
+  metrics: {hit_at_3:1.00, mrr:1.00, context_recall:1.00, noise_ratio:0.00, evaluated_queries:32},
+  documents: [
+    {id:"KEDB-P2-5381", type:"kedb", policy:100, bm25:100, chunking:98, file:"KB_RCA_CPIRCA_CPI_HTTP_404_P2_v1.md"},
+    {id:"RB-P2-5381",   type:"runbook", policy:100, bm25:100, chunking:100, file:"RB_RCA_CPIRCA_CPI_HTTP_404_P2_v1.md"},
+    {id:"KEDB-P2-1146", type:"kedb", policy:100, bm25:100, chunking:98, file:"KB_RCA_CPIRCA_CPI_HTTP_401_P2_v1.md"},
+    {id:"RB-P2-1146",   type:"runbook", policy:100, bm25:100, chunking:100, file:"RB_RCA_CPIRCA_CPI_HTTP_401_P2_v1.md"},
+    {id:"KEDB-P2-8531", type:"kedb", policy:100, bm25:100, chunking:100, file:"KB_RCA_CPIRCA_CPI_SAXPARSEEXCEPTION_P2_v1.md"},
+    {id:"RB-P2-8531",   type:"runbook", policy:100, bm25:100, chunking:100, file:"RB_RCA_CPIRCA_CPI_SAXPARSEEXCEPTION_P2_v1.md"},
+  ],
+  mpl: [
+    {guid:"AGnUDXMPO5FvNlGgQRQdYZQ-o65c", iface:"IFLOW_ORDER_OUT", exception:"HTTP401", err:"HTTP 401 Unauthorized on receiver call", ts:"2026-04-08 08:12"},
+    {guid:"AGxmlparse99", iface:"IFLOW_CUSTOMER_SYNC", exception:"SAXParseException", err:"SAXParseException; Premature end of file", ts:"2026-04-06 20:01"},
+    {guid:"AGabc123XYZ_tokenfail001", iface:"IFLOW_CUSTOMER_SYNC", exception:"HTTP404", err:"HTTP 404 Not Found on receiver OData call", ts:"2026-04-06 19:50"},
+  ],
+  weights: {policy_compliance:20, bm25_readiness:15, chunking_quality:15,
+    retrieval_precision:20, retrieval_recall:15, faithfulness:10, citation_accuracy:5},
+  feedback: [],
+  diagnostics: [
+    {category:"citation_accuracy", label:"Citation accuracy", score:61, weight:5, threshold:80,
+     cause_summary:"Cited sections do not align tightly with the supporting evidence.",
+     observed_causes:[{severity:"medium", cause:"citation points to a section without matching evidence", document_count:3, recommendation:"Align each cited heading with the exact evidence it supports."}],
+     affected_documents:3,
+     actions:["Align each cited heading with the exact evidence it supports so citations point to the right section."]},
+    {category:"retrieval_precision", label:"Retrieval precision", score:68, weight:20, threshold:80,
+     cause_summary:"The object_name or error_pattern is ambiguous, so unrelated documents are retrieved for the query intent.",
+     observed_causes:[{severity:"high", cause:"object_name overlaps a neighbouring error family", document_count:4, recommendation:"Disambiguate object_name so one document maps to one query intent."}],
+     affected_documents:4,
+     actions:["Disambiguate object_name and error_pattern so one document maps to one query intent (Rule 1).","Remove overlapping canonical terms shared with neighbouring error families."]},
+  ],
+  monitoring: {failed_messages:7, completed:1204, interfaces_watched:18, error_patterns:3,
+    by_platform:[], sources_connected:2,
+    interfaces_by_platform:{CPI:12,"PI/PO":4,APIM:2}}
+};
+const WEIGHTS = {policy_compliance:20, bm25_readiness:15, chunking_quality:15,
+    retrieval_precision:20, retrieval_recall:15, faithfulness:10, citation_accuracy:5};
+let DATA = DEMO;       // replaced by live data when the server is present
+let LIVE = false;
+
+const CAT_LABELS = {
+  policy_compliance:"Policy compliance", bm25_readiness:"BM25 readiness",
+  chunking_quality:"Chunking quality", retrieval_precision:"Retrieval precision",
+  retrieval_recall:"Retrieval recall", faithfulness:"Faithfulness", citation_accuracy:"Citation accuracy"};
+
+function scoreClass(v){return v>=90?"hi":v>=70?"mid":"lo"}
+function barClass(v){return v>=80?"":v>=60?"warn":"red"}
+
+// nav
+document.getElementById('nav').addEventListener('click', e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  document.querySelectorAll('section').forEach(s=>s.classList.remove('show'));
+  document.getElementById(b.dataset.s).classList.add('show');
+  if(b.dataset.s==='scenario') loadScenario();
 });
 
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
-  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('on'));
-  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
-  b.classList.add('on'); $('#'+b.dataset.t).classList.add('on');
-  if(b.dataset.t==='indexes') loadIndexes();
-  if(b.dataset.t==='dashboard') loadDashboard();
-  if(b.dataset.t==='documents') loadDocuments();
-});
+// ---- Scenario Lab (02) ----
+let SCN_SOURCES=[], SCN_SELECTED=null, SCN_MODES={design:true,config:true,runtime_mpl:true,parameters:false,full:false};
+const SCN_KIND_ICON={CPI:'☁',PIPO:'⇄',S4:'▦',APIM:'◈',AEM:'◇'};
 
-// Dashboard sub-tabs (Overview / Answer)
-document.querySelectorAll('.subtab').forEach(b=>b.onclick=()=>{
-  document.querySelectorAll('.subtab').forEach(x=>x.classList.remove('on'));
-  document.querySelectorAll('.subpane').forEach(x=>x.classList.remove('on'));
-  b.classList.add('on'); $('#sub-'+b.dataset.s).classList.add('on');
-});
-
-async function loadDashboard(){
-  $('#dash-cards').innerHTML='<div class="hint">loading…</div>';
+async function loadScenario(){
   try{
-    const r=await fetch('/dashboard'); const d=await r.json();
-    const cell=(k,v)=>`<div class="dash-cell"><div class="k">${k}</div><div class="v">${v}</div></div>`;
-    $('#dash-cards').innerHTML=
-      `<div class="dash-grid">${cell('Total documents',d.total)}${cell('Draft',d.draft)}`
-      +`${cell('Approved',d.approved)}${cell('Indexed',d.indexed)}${cell('Avg quality',d.avg_quality)}</div>`
-      +`<div class="dash-section">Knowledge operations</div>`
-      +`<div class="dash-grid">${cell('KEDB total',d.kedb_total)}${cell('KEDB indexed',d.kedb_indexed)}`
-      +`${cell('Runbooks total',d.rb_total)}${cell('Runbooks indexed',d.rb_indexed)}</div>`;
-  }catch(e){ $('#dash-cards').innerHTML=`<div class="banner err">${esc(e.message)}</div>`; }
+    const r=await fetch('/api/scenario-lab/sources'); const d=await r.json();
+    SCN_SOURCES=d.sources||[];
+    if(!SCN_SELECTED && SCN_SOURCES.length) SCN_SELECTED=SCN_SOURCES[0].system_id;
+    renderScnSources(); renderScnModes(); await loadScnRecentPaths(); await refreshScnData();
+  }catch(e){ /* demo mode: leave placeholders */ }
+}
+async function loadScnRecentPaths(){
+  try{
+    const r=await fetch('/api/scenario-lab/recent-paths'); const d=await r.json();
+    const dl=document.getElementById('scn-recent'); if(!dl)return;
+    dl.innerHTML=(d.paths||[]).map(p=>`<option value="${p}">`).join('');
+  }catch(e){}
+}
+function renderScnSources(){
+  const el=document.getElementById('scn-sources'); if(!el)return;
+  el.innerHTML=SCN_SOURCES.map(s=>{
+    const sub=(s.system_kind==='APIM'||s.system_kind==='AEM');
+    const on=s.system_id===SCN_SELECTED;
+    return `<button onclick="selectScn('${s.system_id}')" style="display:flex;align-items:center;gap:8px;text-align:left;
+      padding:${sub?'6px 9px 6px 22px':'8px 9px'};border-radius:6px;font-size:${sub?'12px':'13px'};cursor:pointer;border:none;
+      font-family:var(--mono,monospace);background:${on?'var(--sel,#16314a)':'transparent'};color:${on?'var(--blue)':(sub?'var(--faint)':'var(--muted)')}">
+      ${sub?'↳':(SCN_KIND_ICON[s.system_kind]||'•')} ${s.system_id}
+      ${s.connected?'<span style="margin-left:auto;width:6px;height:6px;border-radius:3px;background:var(--teal)"></span>':''}</button>`;
+  }).join('');
+}
+function renderScnModes(){
+  const el=document.getElementById('scn-modes'); if(!el)return;
+  const modes=[['design','design'],['config','config'],['runtime_mpl','MPL'],['parameters','params'],['full','full']];
+  el.innerHTML=modes.map(([k,lbl])=>{
+    const on=SCN_MODES[k];
+    return `<button onclick="toggleScnMode('${k}')" style="font-size:11px;font-family:var(--mono,monospace);padding:4px 9px;border-radius:6px;cursor:pointer;
+      background:${on?'var(--sel,#16314a)':'transparent'};border:1px solid ${on?'var(--blue)':'var(--line)'};color:${on?'var(--blue)':'var(--muted)'}">${on?'✓':'○'} ${lbl}</button>`;
+  }).join('');
+}
+function selectScn(id){ SCN_SELECTED=id; renderScnSources(); refreshScnData(); }
+function toggleScnMode(k){ SCN_MODES[k]=!SCN_MODES[k]; renderScnModes(); }
+function scnMode(){ if(SCN_MODES.full)return 'full'; const a=['design','config','runtime_mpl','parameters'].filter(k=>SCN_MODES[k]); return a.length?a[0]:'full'; }
+
+async function refreshScnData(){
+  if(!SCN_SELECTED)return;
+  setText('scn-sys-label', SCN_SELECTED);
+  try{
+    const [er,cr]=await Promise.all([
+      fetch('/api/scenario-lab/errors?system_id='+encodeURIComponent(SCN_SELECTED)),
+      fetch('/api/scenario-lab/candidates')]);
+    renderScnErrors((await er.json()).errors||[]);
+    renderScnPairs((await cr.json()).candidates||[]);
+    loadEvidence();
+    loadPredictions();
+  }catch(e){}
+}
+// Normalize a timestamp to "yyyy-mm-dd hh:mm:ss". Handles ISO strings and SAP
+// OData epochs like /Date(1784237395)/ (seconds) or /Date(1784237395000)/ (ms).
+function fmtTs(v){
+  if(!v) return '—';
+  const s=String(v);
+  const m=s.match(/\/Date\((-?\d+)/);
+  if(m){
+    let n=parseInt(m[1],10);
+    if(!isNaN(n)){
+      if(String(Math.abs(n)).length<=11) n*=1000; // seconds -> ms
+      const d=new Date(n);
+      if(!isNaN(d.getTime())) return d.toISOString().replace('T',' ').slice(0,19);
+    }
+  }
+  return s.replace('T',' ').slice(0,19);
+}
+function renderScnErrors(rows){
+  setText('scn-errors', rows.length); setText('scn-new', rows.length);
+  const el=document.getElementById('scn-err-rows'); if(!el)return;
+  el.innerHTML=rows.length? rows.map(e=>{
+    const sig=(e.error_signature||'').slice(0,12);
+    return `<tr><td class="mono">${e.interface_name||'—'}</td>
+      <td class="mono" style="color:var(--muted)">${e.exception_class||'—'}${e.http_status_code?(' ('+e.http_status_code+')'):''}</td>
+      <td>${(e.error_phrase||'').slice(0,60)}</td>
+      <td class="mono" style="color:var(--muted)">${fmtTs(e.first_seen_at)}</td>
+      <td class="row-actions"><button onclick="queueCandidate('${e.error_signature}')">Generate</button></td></tr>`;
+  }).join('') : '<tr><td class="empty" colspan="5" style="color:var(--faint);padding:10px">No errors yet — Pull material to discover first-seen errors</td></tr>';
+}
+function renderScnPairs(rows){
+  setText('scn-pairs', rows.length);
+  const el=document.getElementById('scn-pair-rows'); if(!el)return;
+  el.innerHTML=rows.length? rows.map(p=>{
+    const inv = p.inventory_ref
+      ? `<span class="tag" title="${p.inventory_doc||''} · ${p.inventory_run||''}" style="color:var(--teal)">${p.inventory_ref}</span>`
+      : '<span style="color:var(--faint)">—</span>';
+    const dedup = p.already_documented
+      ? '<span class="tag" style="color:var(--amber)" title="An existing KEDB/RB already covers this interface+exception">documented</span>'
+      : `<span class="tag" style="color:var(--teal)">${p.status||'new'}</span>`;
+    return `<tr${p.already_documented?' style="opacity:.6"':''}>
+      <td class="mono">${p.interface_name||'—'}</td>
+      <td class="mono" style="color:var(--muted)">${p.family||'—'}</td>
+      <td class="mono">${p.count||1}</td>
+      <td><span class="tag">${p.priority||'—'}</span></td>
+      <td>${inv}</td>
+      <td>${dedup}</td></tr>`;}).join('')
+    : '<tr><td class="empty" colspan="6" style="color:var(--faint);padding:10px">No candidates queued yet</td></tr>';
 }
 
-// Dashboard > Answer (same engine as the standalone Answer tab)
-$('#da-go').onclick=async()=>{
-  const btn=$('#da-go'); busy(btn,true,'Generate answer');
-  const body={query:$('#da-q').value, top_k:Number($('#da-k').value)||3,
-    customer_id:$('#da-cust').value||null, system_id:$('#da-sys').value||null,
-    artifact_type:$('#da-art').value||null};
+// Signals Evidence (F1): System ▸ Package ▸ iFlow ▸ Case drill-down.
+let EV_DATA=null, EV_PKG_I=0, EV_FLOW_I=0, EV_CASE='negative';
+async function loadEvidence(){
+  if(!SCN_SELECTED)return;
   try{
-    const {data}=await post('/answer',body);
-    const cites=(data.citations||[]).map(c=>`<span class="c">[${c.ref}] doc ${c.document_id}·${c.section_type}</span>`).join('');
-    $('#da-out').innerHTML=`<div class="answer"><div class="body">${esc(data.answer)}</div>${cites?`<div class="cites">${cites}</div>`:''}</div>`;
-  }catch(e){ $('#da-out').innerHTML=`<div class="banner err">${esc(e.message)}</div>`; }
-  busy(btn,false,'Generate answer');
-};
-
-// DOCUMENTS
-async function loadDocuments(){
-  $('#docs-list').innerHTML='<div class="hint">loading…</div>';
-  try{
-    const r=await fetch('/documents'); const data=await r.json();
-    const docs=data.documents||[];
-    $('#docs-count').textContent=`${docs.length} document(s)`;
-    if(!docs.length){ $('#docs-list').innerHTML='<div class="hint">no documents yet</div>'; return; }
-    $('#docs-list').innerHTML=docs.map(d=>{
-      const q=d.quality_score!=null?d.quality_score.toFixed(1):'—';
-      return `<div class="doc" data-id="${d.id}">
-        <div class="row-h" onclick="toggleDoc(${d.id})">
-          <span class="chev">›</span>
-          <span class="fn">${esc(d.filename)} <small>[${esc(d.version)}]</small></span>
-          <span class="pill">${esc(d.artifact_type)}</span>
-          <span class="pill">q ${q}</span>
-          <span class="pill s-${d.status}">${esc(d.status)}</span>
-        </div>
-        <div class="detail" id="det-${d.id}"></div>
-      </div>`;
-    }).join('');
-  }catch(e){ $('#docs-list').innerHTML=`<div class="banner err">${esc(e.message)}</div>`; }
+    const r=await fetch('/api/scenario-lab/evidence?system_id='+encodeURIComponent(SCN_SELECTED));
+    const d=await r.json();
+    EV_DATA=(d.evidence||{})[SCN_SELECTED]||null;
+    EV_PKG_I=0; EV_FLOW_I=0; renderEvidence();
+  }catch(e){}
 }
-
-window.toggleDoc=async(id)=>{
-  const card=document.querySelector(`.doc[data-id="${id}"]`);
-  const open=card.classList.toggle('open');
-  card.querySelector('.chev').textContent=open?'⌄':'›';
-  if(!open) return;
-  const det=$('#det-'+id);
-  det.innerHTML='<div class="hint">loading…</div>';
-  try{
-    const r=await fetch('/document?id='+id); const d=await r.json();
-    const m=(l,v)=>`<div class="m"><span class="ml">${l}</span><span class="mv">${esc(String(v??'—'))}</span></div>`;
-    const audit=(d.audit||[]).map(a=>`<div class="audit-row">
-      <span class="ts">${esc(a.at)}</span><span class="pill">${esc(a.action)}</span>
-      <span>${esc(a.actor)}</span><span>${esc(a.detail||'')}</span></div>`).join('') || '<div class="hint">no audit rows</div>';
-    det.innerHTML=`
-      <div class="dtabs">
-        <button class="dtab on" onclick="dtab(${id},'det')">Details</button>
-        <button class="dtab" onclick="dtab(${id},'aud')">Audit Trail</button>
-        <button class="dtab" onclick="dtab(${id},'ver')">Version History</button>
-      </div>
-      <div class="dpane on" id="dp-det-${id}">
-        <div class="meta-grid">
-          ${m('Document ID',d.id)}${m('Artifact',d.artifact_type)}
-          ${m('Version',d.version)}${m('Priority',d.priority)}
-          ${m('Customer',d.customer_id)}${m('Object',d.object_name)}
-          ${m('System',d.system_id)}${m('Quality',d.quality_score!=null?d.quality_score.toFixed(1)+' ('+(d.quality_status||'').replace(/_/g,' ')+')':'—')}
-          ${m('Environment',d.environment)}${m('Chunks',d.chunks)}
-          ${m('Signature',(d.error_signature||'').slice(0,24)+'…')}${m('Status',d.status)}
-        </div>
-      </div>
-      <div class="dpane" id="dp-aud-${id}">${audit}</div>
-      <div class="dpane" id="dp-ver-${id}">
-        <div class="meta-grid">${m('Version',d.version)}${m('Status',d.status)}${m('Created',d.created_at)}${m('Latest','✓')}</div>
-      </div>
-      <div class="del">
-        <label><input type="checkbox" id="cd-${id}" onchange="$('#delbtn-${id}').disabled=!this.checked"> Confirm delete</label>
-        <button id="delbtn-${id}" disabled onclick="delDoc(${id})">Delete</button>
-      </div>`;
-  }catch(e){ det.innerHTML=`<div class="banner err">${esc(e.message)}</div>`; }
-};
-
-window.dtab=(id,which)=>{
-  ['det','aud','ver'].forEach(w=>{
-    document.querySelector(`#dp-${w}-${id}`).classList.toggle('on',w===which);
+function selectEvPkg(i){ EV_PKG_I=i; EV_FLOW_I=0; renderEvidence(); }
+function selectEvFlow(i){ EV_FLOW_I=i; renderEvidence(); }
+function selectEvCase(c){ EV_CASE=c; renderEvidence(); }
+function evRow(label, active, onclick, right){
+  return `<button onclick="${onclick}" title="${label}" style="display:flex;align-items:center;gap:6px;text-align:left;padding:6px 8px;border:none;border-radius:6px;cursor:pointer;font-family:var(--mono,monospace);font-size:12px;background:${active?'var(--sel,#16314a)':'transparent'};color:${active?'var(--blue)':'var(--muted)'}"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${label}</span>${right||''}</button>`;
+}
+function renderEvidence(){
+  const pkgs=(EV_DATA&&EV_DATA.packages)?EV_DATA.packages:{};
+  const pkgKeys=Object.keys(pkgs);
+  const empty=document.getElementById('ev-empty'); if(empty) empty.style.display=pkgKeys.length?'none':'block';
+  const pe=document.getElementById('ev-packages');
+  if(pe) pe.innerHTML=pkgKeys.map((k,i)=>evRow(k, i===EV_PKG_I, `selectEvPkg(${i})`, '')).join('');
+  const pkg=pkgKeys.length?pkgs[pkgKeys[Math.min(EV_PKG_I,pkgKeys.length-1)]]:null;
+  const flows=(pkg&&pkg.iflows)?pkg.iflows:{};
+  // F2: order iFlows by corpus priority (prevalence) desc, then name.
+  const flowKeys=Object.keys(flows).sort((a,b)=>{
+    const pa=(flows[a].priors&&flows[a].priors.priority_score)||0;
+    const pb=(flows[b].priors&&flows[b].priors.priority_score)||0;
+    return pb-pa || a.localeCompare(b);
   });
-  const card=$('#det-'+id);
-  card.querySelectorAll('.dtab').forEach(b=>b.classList.remove('on'));
-  event.target.classList.add('on');
+  const fe=document.getElementById('ev-iflows');
+  if(fe) fe.innerHTML=flowKeys.map((k,i)=>{
+    const rd=flows[k].readiness||{}; const dot=rd.generation_ready?'var(--teal)':(rd.failed_ge_2?'var(--amber)':'var(--red)');
+    const pri=(flows[k].priors&&flows[k].priors.total_observed)||0;
+    const badge=pri?`<span title="corpus occurrences (priority)" class="tag" style="font-size:10px;color:var(--amber);padding:0 5px;flex:none">×${pri}</span>`:'';
+    return evRow(k, i===EV_FLOW_I, `selectEvFlow(${i})`, `${badge}<span title="readiness" style="width:8px;height:8px;border-radius:4px;background:${dot};display:inline-block;flex:none"></span>`);
+  }).join('');
+  const flow=flowKeys.length?flows[flowKeys[Math.min(EV_FLOW_I,flowKeys.length-1)]]:null;
+  renderEvSamples(flow);
+}
+function renderEvSamples(flow){
+  const tabs=document.getElementById('ev-case-tabs'), box=document.getElementById('ev-samples');
+  if(!tabs||!box)return;
+  if(!flow){ tabs.innerHTML=''; box.innerHTML=''; return; }
+  const neg=flow.negative||{count:0,samples:[]}, pos=flow.positive||{count:0,samples:[]}, rd=flow.readiness||{};
+  const tab=(c,lbl,n,col)=>`<button onclick="selectEvCase('${c}')" style="font-size:11px;font-family:var(--mono,monospace);padding:3px 10px;border-radius:6px;cursor:pointer;background:${EV_CASE===c?'var(--sel,#16314a)':'transparent'};border:1px solid ${EV_CASE===c?col:'var(--line)'};color:${EV_CASE===c?col:'var(--muted)'}">${lbl} ${n}</button>`;
+  const rdTag=rd.generation_ready
+    ? '<span class="tag" style="color:var(--teal)">generation-ready</span>'
+    : `<span class="tag" style="color:var(--amber)">needs ${neg.count<2?((2-neg.count)+' failed'):''}${(neg.count<2&&pos.count<1)?' + ':''}${pos.count<1?'1 success':''}</span>`;
+  tabs.innerHTML=tab('negative','Negative',neg.count,'var(--red)')+tab('positive','Positive',pos.count,'var(--teal)')+`<span style="margin-left:auto">${rdTag}</span>`;
+  const cur=EV_CASE==='negative'?neg:pos;
+  const rows=(cur.samples||[]).slice().reverse().map(s=>{
+    const ts=fmtTs(s.ts);
+    const meta=EV_CASE==='negative'
+      ? `<div class="note" style="color:var(--amber);font-size:11px">${s.taxonomy||''}</div><div style="color:var(--muted);font-size:11px">${(s.error||'').slice(0,90)}</div>`
+      : '<div class="note" style="color:var(--teal);font-size:11px">COMPLETED</div>';
+    return `<div style="padding:6px 0;border-bottom:1px solid var(--line)">
+      <div class="mono" style="font-size:11px;color:var(--muted)">${ts} · ${(s.message_guid||'').slice(0,18)}</div>
+      <div class="mono" style="font-size:11px">${s.sender||'—'} → ${s.receiver||'—'}</div>${meta}</div>`;
+  }).join('');
+  const pri=flow.priors; let priLine='';
+  if(pri&&pri.total_observed){
+    const tax=Object.entries(pri.taxonomies||{}).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([t,n])=>`${t} ×${n}`).join(' · ');
+    priLine=`<div class="note" style="color:var(--faint);margin-bottom:6px;padding:4px 0;border-bottom:1px dashed var(--line)">Corpus prior: ${pri.total_observed} occurrence(s)${pri.last_seen?(' · last '+String(pri.last_seen).replace('T',' ').slice(0,16)):''}${tax?(' · '+tax):''}</div>`;
+  }
+  box.innerHTML=priLine+(rows||'<div class="note" style="color:var(--faint);padding:8px">No samples in this case.</div>');
+}
+
+// Case Prediction — Test Matrix (F3).
+let PRED=[], PRED_I=0;
+async function loadPredictions(){
+  if(!SCN_SELECTED)return;
+  try{
+    const r=await fetch('/api/scenario-lab/predictions?system_id='+encodeURIComponent(SCN_SELECTED));
+    const d=await r.json(); PRED=d.predictions||[]; PRED_I=0; renderPredictions();
+  }catch(e){}
+}
+async function runPredict(btn){
+  if(!SCN_SELECTED)return; const old=btn.textContent; btn.textContent='Predicting…'; btn.disabled=true;
+  const note=document.getElementById('pred-note');
+  try{
+    const r=await fetch('/api/scenario-lab/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system_id:SCN_SELECTED})});
+    const d=await r.json();
+    if(d.error){ if(note)note.textContent='Error: '+d.error; }
+    else{ PRED=d.predictions||[]; PRED_I=0; renderPredictions();
+      if(note)note.textContent=`${d.predicted||0} iFlow(s) predicted · design ${d.design_available?'✓':'—'} · payload ${d.xsd_available?'from XSD':'template'}`; }
+  }catch(e){ if(note)note.textContent='Predict failed.'; }
+  finally{ btn.textContent=old||'⚙ Predict test matrix'; btn.disabled=false; }
+}
+function selectPred(i){ PRED_I=i; renderPredictions(); }
+function renderPredictions(){
+  const tb=document.getElementById('pred-rows'); if(!tb)return;
+  if(!PRED.length){ tb.innerHTML='<tr><td class="empty" colspan="4" style="color:var(--faint);padding:10px">No predictions yet — click Predict test matrix.</td></tr>';
+    const dt=document.getElementById('pred-detail'); if(dt)dt.innerHTML=''; return; }
+  tb.innerHTML=PRED.map((p,i)=>{
+    const m=p.meta||{};
+    const ok=m.meets_min_negative?'<span class="tag" style="color:var(--teal)">✓</span>':`<span class="tag" style="color:var(--amber)">${m.negative_count||0}/${m.min_negative_target||5}</span>`;
+    const src=m.payload_source==='cpiview_xsd'?'<span class="tag" style="color:var(--teal)">XSD</span>':'<span class="tag" style="color:var(--faint)">template</span>';
+    return `<tr onclick="selectPred(${i})" style="cursor:pointer;background:${i===PRED_I?'var(--sel,#16314a)':'transparent'}"><td class="mono">${p.iflow||'—'}</td><td class="mono">${(p.negative||[]).length}</td><td>${ok}</td><td>${src}</td></tr>`;
+  }).join('');
+  renderPredDetail(PRED[Math.min(PRED_I,PRED.length-1)]);
+}
+function predCase(c, neg){
+  const col=neg?'var(--red)':'var(--teal)';
+  const head=neg?`<span class="tag" style="color:${col}">${c.method}</span> <span class="mono" style="font-size:11px;color:var(--amber)">${c.provokes||''}</span> <span class="note" style="color:var(--faint)">conf ${c.confidence} · ${c.source}</span>`
+                :`<span class="tag" style="color:${col}">${c.method}</span> <span class="note" style="color:var(--faint)">→ ${c.expected_status||''} · ${c.source}</span>`;
+  const cfg=c.config_delta&&Object.keys(c.config_delta).length?`<div class="mono" style="font-size:11px;color:var(--muted)">config: ${Object.entries(c.config_delta).map(([k,v])=>k+'='+v).join(', ')}</div>`:'';
+  const pl=c.payload?`<pre style="font-size:10px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px;overflow-x:auto;margin:4px 0 0">${esc(c.payload)}</pre>`:'';
+  return `<div style="padding:6px 0;border-bottom:1px solid var(--line)"><div>${head}</div>${cfg}<div class="note" style="font-size:11px">${c.how_to_run||''}</div>${pl}</div>`;
+}
+function renderPredDetail(p){
+  const box=document.getElementById('pred-detail'); if(!box)return; if(!p){ box.innerHTML=''; return; }
+  const neg=(p.negative||[]).map(c=>predCase(c,true)).join('')||'<div class="note" style="color:var(--faint)">none (design does not allow)</div>';
+  const pos=(p.positive||[]).map(c=>predCase(c,false)).join('');
+  box.innerHTML=`<div class="subhead" style="color:var(--red)">Negative cases (${(p.negative||[]).length})</div>${neg}<div class="subhead" style="color:var(--teal);margin-top:8px">Positive case</div>${pos}`;
+}
+function exportPredictions(){
+  if(!PRED.length){ const n=document.getElementById('pred-note'); if(n)n.textContent='Nothing to export — predict first.'; return; }
+  const blob=new Blob([JSON.stringify({system_id:SCN_SELECTED,generated_at:new Date().toISOString(),predictions:PRED},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`test_matrix_${SCN_SELECTED||'system'}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+}
+
+// Stream C: harvest the unified Error Corpus into atomic candidates.
+async function harvestFromCorpus(btn){
+  const note=document.getElementById('scn-corpus-note');
+  const old=btn?btn.textContent:''; if(btn){ btn.textContent='⤓ Harvesting…'; btn.disabled=true; }
+  try{
+    const r=await fetch('/api/scenario-lab/harvest-corpus',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({triggered_by:'operator'})});
+    const d=await r.json();
+    if(d.error){ if(note){ note.textContent='Error: '+d.error; } }
+    else{
+      renderScnPairs(d.candidates||[]);
+      setText('scn-errors', d.new_errors||0); setText('scn-new', d.new_errors||0);
+      const ee=d.evidence_enrichment||{};
+      if(note){ note.textContent =
+        `${d.records||0} records · ${d.candidates_total||0} candidates `+
+        `(${d.candidates_new_undocumented||0} new · ${d.already_documented||0} already documented)`+
+        (ee.recorded!=null?` · evidence +${ee.recorded} (${ee.iflows_prioritized||0} iFlows prioritized)`:''); }
+      loadEvidence();
+    }
+  }catch(e){ if(note){ note.textContent='Harvest failed.'; } console.error('corpus harvest failed:', e); }
+  finally{ if(btn){ btn.textContent=old||'⤓ Harvest from corpus'; btn.disabled=false; } }
+}
+async function pullMaterial(btn){
+  if(!SCN_SELECTED)return; const old=btn.textContent; btn.textContent='Pulling…'; btn.disabled=true;
+  try{
+    const local=(document.getElementById('scn-local').value||'').trim();
+    const cpiview=(document.getElementById('scn-cpiview').value||'').trim();
+    const r=await fetch('/api/scenario-lab/harvest',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({system_id:SCN_SELECTED, mode:scnMode(), local_source:local||null, cpiview_db:cpiview||null})});
+    const d=await r.json();
+    if(d.summary){ setText('scn-objects', d.summary.objects); }
+    renderScnErrors(d.errors||[]); renderScnPairs(d.candidates||[]);
+    await loadScnRecentPaths();
+  }catch(e){} finally{ btn.textContent=old; btn.disabled=false; }
+}
+async function generateGroup(btn){
+  const old=btn.textContent; btn.textContent='Generating…'; btn.disabled=true;
+  try{
+    const r=await fetch('/api/scenario-lab/generate-group',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({triggered_by:'operator'})});
+    const d=await r.json();
+    const note=document.getElementById('scn-group-note');
+    if(note) note.textContent = d.run_id? (d.queued+' candidates → '+d.run_id) : (d.error||'');
+    await refreshScnData();
+  }catch(e){} finally{ btn.textContent=old; btn.disabled=false; }
+}
+async function queueCandidate(sig){
+  try{
+    const r=await fetch('/api/scenario-lab/candidate-status',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({system_id:SCN_SELECTED, error_signature:sig, status:'queued_for_generation'})});
+    const d=await r.json(); renderScnPairs(d.candidates||[]);
+  }catch(e){}
+}
+
+function renderAll(){
+  renderMonitoring(); renderBenchmark(); renderFeedback(); renderPackages(); renderGeneration();
+  renderGenInventory(); renderGenPairs();
+}
+
+// produced documents for the last generation run (Generation tab lower section)
+function renderGeneration(){
+  function pkgScore(d){return d.overall!=null?d.overall:Math.round((d.policy+d.bm25+d.chunking)/3)}
+  const card = document.getElementById('gen-results-card');
+  const rows = document.getElementById('gen-rows');
+  const title = document.getElementById('gen-results-title');
+  if(!card || !rows) return;
+  const docs = (LIVE && CURRENT_RUN) ? (DATA.documents||[]) : [];
+  if(!docs.length){ card.style.display = 'none'; rows.innerHTML = ''; return; }
+  card.style.display = 'block';
+  if(title) title.textContent = CURRENT_RUN || 'Generated documents';
+  const _genTable = rows.closest('table');
+  if(_genTable) _genTable.classList.toggle('hide-docid',
+    docs.length>0 && docs.every(d=>d.type==='doc'));
+  rows.innerHTML = docs.map(d=>{
+    const t = d.type==='runbook'?'rb':d.type==='kedb'?'kb':'doc';
+    const sc = pkgScore(d);
+    const ver = d.version || (d.file&&(d.file.match(/_v(\d+)\.md$/)||[])[0]?.slice(1)) || 'v1';
+    return `<tr><td class="mono" style="font-size:12px;color:var(--teal)">${d.id||'—'}</td>
+      <td class="mono" style="font-size:12px">${d.file}</td><td><span class="tag ${t}">${d.type}</span></td>
+      <td class="mono">${ver}</td><td class="score ${scoreClass(sc)}">${sc}</td>
+      <td class="row-actions"><button onclick="viewDoc('${d.file}')">View</button>
+        <button onclick="downloadOne('${d.file}')">Download</button></td></tr>`;}).join('')
+    || '<tr><td class="empty" colspan="6" style="color:var(--faint);padding:10px">No documents in this run</td></tr>';
+}
+
+// interface_inventory series (Generation tab, top-right scrollable panel)
+function renderGenInventory(){
+  const body = document.getElementById('gen-inv-rows');
+  if(!body) return;
+  const docs = INV_DOCS || [];
+  if(!docs.length){
+    body.innerHTML = '<tr><td class="empty" colspan="2" style="color:var(--faint);padding:10px">'
+      + 'Click “Generate interface_inventory_docs” to populate this list.</td></tr>';
+    return;
+  }
+  body.innerHTML = docs.map(d=>{
+    const flow = d.integration_flow_id || d.object_name || '—';
+    const dc = d.design_found ? '<span class="tag" style="color:var(--teal)">CPIView</span>' : '';
+    return `<tr><td class="mono" title="${d.doc_id||d.object_name||''}">${flow}</td>
+      <td><span class="tag doc">DOC</span> ${dc}</td></tr>`;
+  }).join('');
+}
+
+// atomic KB+RB pairs series (Generation tab, bottom-right "What will be produced"
+// scrollable panel). Mirrors renderGenInventory: groups the run's packages into
+// one row per error pattern (KEDB-Pn-nnnn + RB-Pn-nnnn share the -Pn-nnnn id),
+// so the panel fills with the real produced series instead of a frozen spinner.
+// The container already has max-height + overflow-y:auto, so the vertical
+// scrollbar appears automatically once the list overflows.
+function renderGenPairs(){
+  const body = document.getElementById('gen-pairs-rows');
+  if(!body) return;
+  const docs = (PAIR_DOCS||[]).filter(d=>d.type==='kedb'||d.type==='runbook');
+  if(!docs.length){
+    body.innerHTML = '<tr><td class="empty" colspan="3" style="color:var(--faint);padding:10px">'
+      + 'Click “Generate atomic KB + RB pairs” to populate this list.</td></tr>';
+    return;
+  }
+  // group KEDB (KB) + runbook (RB) that share the same numeric pair id
+  const pairs = new Map();
+  docs.forEach(d=>{
+    const id = String(d.id||'');
+    const key = (id.match(/(P\d+-\d+)\s*$/)||[])[1]
+             || (d.file||'').replace(/^(KB|RB)_/,'').replace(/_v\d+\.md$/,'');
+    let p = pairs.get(key);
+    if(!p){
+      const stem = String(d.file||'').replace(/^(KB|RB)_/,'')
+                     .replace(/_v\d+\.md$/,'').replace(/_(P\d+)$/,'');
+      p = {key, pattern: stem || '—', file: d.file || '', kb:false, rb:false};
+      pairs.set(key, p);
+    }
+    if(d.type==='kedb')    p.kb = true;
+    if(d.type==='runbook') p.rb = true;
+  });
+  body.innerHTML = [...pairs.values()].map(p=>{
+    const outs = (p.kb?'<span class="tag kb">KB</span> ':'')
+               + (p.rb?'<span class="tag rb">RB</span>':'') || '—';
+    return `<tr><td class="mono" title="${p.file}">${p.pattern}</td>`
+      + `<td class="mono">-${p.key}</td><td>${outs}</td></tr>`;
+  }).join('');
+}
+
+// "Generate interface_inventory_docs" — the FOUNDATIONAL inventory layer.
+// Independent of any RUN: sources CPIView design + MPL and writes an
+// INV-NNN-YYYYMMDD run. No prior pairs / monitor.json are required.
+async function runInventoryGeneration(btn){
+  const status = document.getElementById('gen-status');
+  const v = (document.getElementById('gen-version').value||'v1').trim();
+  if(!/^v\d+$/.test(v)){
+    status.innerHTML = '<span style="color:var(--red)">Version must look like v1, v2, v3 …</span>';
+    return;
+  }
+  if(!LIVE){
+    status.innerHTML = '<span style="color:var(--amber)">Live generation needs the server. '+
+      'Start it with <code>python -m orchestrator.server</code>.</span>';
+    return;
+  }
+  const dupBlock = document.getElementById('gen-dup').value.startsWith('Block');
+  const aiEnrich = (document.getElementById('gen-ai')||{}).value === 'on';
+  const sel = document.getElementById('gen-source'); const src = sel ? sel.value : 'CPI';
+  if(btn) btn.disabled = true;
+  try{
+    // animated indicator at the head of the zone that will be filled
+    const _invBody = document.getElementById('gen-inv-rows');
+    if(_invBody) _invBody.innerHTML = '<tr><td colspan="2">'
+      + qkRunning('Generating interface_inventory docs…') + '</td></tr>';
+    status.innerHTML = qkRunning('Generating interface_inventory docs (INV run)…');
+    const r = await fetch('/api/inventory/generate', {method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({sap_sid:src, version:v, duplicate_block:dupBlock, ai_enrich:aiEnrich})});
+    if(!r.ok){ const e=await r.json().catch(()=>({error:'request failed'})); throw new Error(e.message||e.error||'request failed'); }
+    const res = await r.json();
+    INV_DOCS = (res.metrics && res.metrics.docs) || [];
+    renderGenInventory();
+    const n = (res.metrics && res.metrics.documents_created) || 0;
+    const invid = res.inv_run_id || '';
+    const msrc = res.mpl_source ? ` · MPL ${res.mpl_source}` : '';
+    status.innerHTML = stepLine('generate','done',
+      `${n} interface_inventory doc(s) at ${v} · ${invid}${msrc}`);
+  }catch(err){
+    status.innerHTML = '<span style="color:var(--red)">'+(err.message||'generation failed')+'</span>';
+  }finally{
+    if(btn) btn.disabled = false;
+  }
+}
+
+function renderMonitoring(){
+  const m = DATA.monitoring || DEMO.monitoring;
+  setText('m-failed', m.failed_messages);
+  setText('m-completed', (m.completed||0).toLocaleString());
+  setText('m-interfaces', m.interfaces_watched);
+  setText('m-patterns', m.error_patterns);
+  const ibp = m.interfaces_by_platform || {};
+  const ibpStr = Object.entries(ibp).map(([k,v])=>`${k} ${v}`).join(' · ');
+  setText('m-interfaces-sub', ibpStr || 'across platforms');
+  setText('m-sources', (m.sources_connected||0)+' sources connected');
+  // new v16 features are isolated: a failure here must never break the rest of
+  // the dashboard (tiles, downstream renders, or the live connection overlay).
+  try{ renderEligibilityChips(m.eligibility); }catch(e){ console.error('eligibility chips failed:', e); }
+  try{ renderCorpus(m.corpus); }catch(e){ console.error('corpus render failed:', e); }
+  // the "Recent failed messages (last 5 errors)" table is rendered inside the
+  // system tiles (between CPI-RCA tenant and APIM-RCA); fill it if present.
+  fillRecentFailedRows();
+}
+
+// ---- Unified Error Corpus + MPL Archive loader ----
+let SELECTED_MONTHS = [];
+
+// Render the signature-keyed corpus table (top patterns) + the runs/archive
+// source note. This is what makes "Error patterns" mean real diversity.
+function renderCorpus(corpus){
+  corpus = corpus || {};
+  const rows = corpus.top_patterns || corpus.patterns || [];
+  const body = document.getElementById('corpus-rows');
+  if(body){
+    body.innerHTML = rows.length ? rows.map(p=>
+      `<tr><td class="mono">${p.family||'—'}</td>
+       <td class="mono" style="color:var(--muted)">${p.taxonomy||'—'}</td>
+       <td class="mono">${p.count||0}</td>
+       <td class="mono">${p.distinct_interface_count||0}</td>
+       <td>${(p.sources||[]).map(s=>`<span class="tag" style="color:var(--muted)">${s}</span>`).join(' ')}</td>
+       <td class="mono" style="color:var(--muted)">${(p.last_seen||'').replace('T',' ').slice(0,19)||'—'}</td></tr>`).join('')
+      : '<tr><td class="empty" colspan="6" style="color:var(--faint);padding:10px">No patterns in the corpus yet — run Monitoring or select archive months.</td></tr>';
+  }
+  const sub = document.getElementById('corpus-sub');
+  if(sub){
+    const src = corpus.by_source || {};
+    const sel = (corpus.selected_months||[]).length;
+    sub.textContent = `${corpus.distinct_patterns||0} distinct signatures · sources: `+
+      (Object.keys(src).length? Object.entries(src).map(([k,v])=>`${k}`).join('+') : 'runs')+
+      (sel? ` · ${sel} archive month(s)`:'');
+  }
+}
+
+// Populate the archive-month checkboxes from /api/mpl-archive/months.
+async function loadArchiveMonths(){
+  const box = document.getElementById('mpl-archive-months');
+  if(!box) return;
+  if(!LIVE){ box.innerHTML = '<span class="note" style="color:var(--faint)">Archive selection needs the server.</span>'; return; }
+  try{
+    const r = await fetch('/api/mpl-archive/months');
+    const months = (await r.json()).months || [];
+    if(!months.length){ box.innerHTML = '<span class="note" style="color:var(--faint)">No archive months yet — MPL sync has not written mpl_MM_YYYY.json.</span>'; return; }
+    box.innerHTML = months.map(m=>{
+      const val = m.file || `mpl_${m.month}_${m.year}.json`;
+      const on = SELECTED_MONTHS.includes(val) ? 'checked' : '';
+      return `<label class="tag" style="cursor:pointer;padding:4px 10px;border:1px solid var(--line);border-radius:12px">`+
+        `<input type="checkbox" value="${val}" ${on} style="margin-right:6px">${m.month}/${m.year} `+
+        `<span style="color:var(--faint)">(${m.records})</span></label>`;
+    }).join('');
+  }catch(e){ box.innerHTML = '<span class="note" style="color:var(--faint)">Could not load archive months.</span>'; }
+}
+
+// Controlled action: pull live FAILED MPL into the monthly archive store, then
+// refresh the corpus + month selector so the newly persisted records show up.
+async function syncArchive(){
+  const btn = document.getElementById('corpus-sync');
+  if(!LIVE){ if(btn){ btn.textContent='needs server'; } return; }
+  if(btn){ btn.disabled=true; btn.textContent='⤓ Syncing…'; }
+  try{
+    const r = await fetch('/api/mpl-archive/sync', {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({hours:24})});
+    const res = await r.json();
+    if(res.full_state){ applyFullState(res.full_state); renderAll(); refreshConnections(); }
+    const n = res.sync && res.sync.total_new_failed;
+    if(btn){ btn.textContent = (n!=null? `⤓ Synced (+${n})` : '⤓ Sync archive'); }
+    await loadArchiveMonths();
+  }catch(e){ if(btn){ btn.textContent='⤓ Sync failed'; } console.error('archive sync failed:', e); }
+  finally{ if(btn){ btn.disabled=false; setTimeout(()=>{ if(btn) btn.textContent='⤓ Sync archive'; }, 4000); } }
+}
+
+// Re-fetch full-state with the checked archive months folded into the corpus.
+async function reloadWithMonths(){
+  if(!LIVE){ return; }
+  const box = document.getElementById('mpl-archive-months');
+  SELECTED_MONTHS = box ? [...box.querySelectorAll('input:checked')].map(i=>i.value) : [];
+  const qs = SELECTED_MONTHS.length ? ('?months='+encodeURIComponent(SELECTED_MONTHS.join(','))) : '';
+  try{
+    const r = await fetch('/api/full-state'+qs);
+    if(r.ok){ applyFullState(await r.json()); renderAll(); refreshConnections(); }
+  }catch(e){ /* keep current */ }
+}
+
+// Human-readable labels for the structured eligibility reason codes.
+const REASON_LABELS = {
+  ELIGIBLE:'Eligible',
+  ALREADY_DOCUMENTED:'Already documented',
+  DUPLICATE_PATTERN:'Duplicate in batch',
+  INSUFFICIENT_EVIDENCE:'Insufficient evidence',
+  TRANSIENT_BELOW_THRESHOLD:'Transient (below threshold)',
+  NON_ERROR_STATUS:'Non-error status',
+  NORMAL_BACKLOG:'Normal backlog',
+  UNSUPPORTED_EVENT_TYPE:'Unsupported type',
+  MALFORMED_SOURCE_RECORD:'Malformed record',
+  MANUALLY_SUPPRESSED:'Suppressed',
 };
 
-window.delDoc=async(id)=>{
-  try{
-    const {status}=await post('/delete',{id});
-    if(status===200){ loadDocuments(); }
-    else { alert('Delete failed'); }
-  }catch(e){ alert(e.message); }
-};
+// Render one chip per eligibility outcome so an operator sees WHY the KB+RB
+// candidate count is what it is — not just the number. Read-only/advisory.
+function renderEligibilityChips(el){
+  const box = document.getElementById('m-eligibility');
+  if(!box) return;
+  el = el || {};
+  const chip = (label, val, color) =>
+    `<span class="tag" title="${label}" style="border:1px solid ${color};color:${color};`+
+    `padding:3px 9px;border-radius:12px;font-size:12px">${label}: <b>${val}</b></span>`;
+  // LEFT: global eligible + ineligibility-reason chips (existing behaviour).
+  const left = [];
+  if(el.eligible!=null) left.push(chip('Eligible for KB+RB', el.eligible, 'var(--teal)'));
+  const reasons = el.reasons||{};
+  Object.keys(reasons).sort((a,b)=>reasons[b]-reasons[a]).forEach(code=>{
+    left.push(chip(REASON_LABELS[code]||code, reasons[code], 'var(--amber)'));
+  });
+  // RIGHT: per-system KB+RB candidate / duplicate-in-batch breakdown for
+  // CPI / APIM / AEM / PI-PO / S4H (same signal as the two global chips, split
+  // by source system). Pushed to the right via margin-left:auto.
+  const bp = el.by_platform||{};
+  const order = ['CPI','APIM','AEM','PIPO','S4H'];
+  const plats = order.concat(Object.keys(bp).filter(p=>order.indexOf(p)<0));
+  const sysChips = plats.filter(p=>bp[p]).map(p=>{
+    const b = bp[p]||{}, e = b.eligible||0, d = b.duplicate||0;
+    return `<span class="tag" title="${p} · Eligible for KB+RB: ${e} · Duplicate in batch: ${d}" `+
+      `style="border:1px solid var(--line);padding:3px 9px;border-radius:12px;font-size:12px">`+
+      `<b>${p}</b> <span style="color:var(--teal)">KB+RB ${e}</span> · `+
+      `<span style="color:var(--amber)">dup ${d}</span></span>`;
+  });
+  const leftHtml = left.length ? left.join('')
+    : '<span class="note" style="color:var(--faint)">No eligibility breakdown yet — run Monitoring.</span>';
+  const rightHtml = sysChips.length
+    ? `<div style="margin-left:auto;display:flex;flex-wrap:wrap;gap:6px;align-items:center">`+
+      `<span class="note" style="color:var(--faint);font-size:11px">Per system:</span>${sysChips.join('')}</div>`
+    : '';
+  box.innerHTML = leftHtml + rightHtml;
+}
 
-async function loadIndexes(){
-  $('#ix-cards').innerHTML='<div class="hint">loading…</div>';
-  $('#ix-table').innerHTML='';
+// ---- Recent failed messages (last 5 errors), shown between CPI and APIM ----
+function recentFailedTableHtml(){
+  return `<div class="card" style="margin:2px 0">
+    <h3>Recent Failed Messages (24-h Last Errors)</h3>
+    <div style="max-height:210px;overflow-y:auto;margin-top:10px">
+    <table>
+      <thead><tr style="position:sticky;top:0;background:#0e1626"><th>Interface</th><th>Exception</th><th>Status</th><th>Error</th><th class="mono">Date / time</th></tr></thead>
+      <tbody id="mpl-rows"></tbody>
+    </table>
+    </div>
+  </div>`;
+}
+function fillRecentFailedRows(){
+  const body = document.getElementById('mpl-rows');
+  if(!body) return;  // table only exists once systems are rendered
+  const src = (DATA.mpl && DATA.mpl.length) ? DATA.mpl : DEMO.mpl;
+  // all failed messages in the last 24h (scrollable panel), newest first
+  const rows = (src||[]);
+  body.innerHTML = rows.length ? rows.map(m=>
+    `<tr><td class="mono">${m.iface}</td>
+     <td class="mono">${m.exception||'—'}</td>
+     <td><span class="tag" style="color:var(--red)">FAILED</span></td><td>${m.err}</td>
+     <td class="mono" style="color:var(--muted)">${m.ts||'—'}</td></tr>`).join('')
+    : '<tr><td class="empty" colspan="5" style="color:var(--faint);padding:10px">No failed messages in the current run</td></tr>';
+}
+
+function renderBenchmark(){
+  setText('bm-overall', DATA.overall);
+  setText('bm-status', DATA.status);
+  // adapted-profile indicator: for interface_inventory runs, show the profile
+  // and that Faithfulness is N/A (its category is intentionally absent below).
+  const prof = document.getElementById('bm-profile');
+  if(prof){
+    if(DATA.profile && DATA.profile === 'interface_inventory'){
+      prof.textContent = 'Profile: interface_inventory · Faithfulness N/A';
+      prof.style.display = 'inline-block';
+    } else {
+      prof.style.display = 'none';
+    }
+  }
+  const me = DATA.metrics||{};
+  setText('bm-hit3', (me.hit_at_3??0).toFixed? (me.hit_at_3??0).toFixed(2):me.hit_at_3||'—');
+  setText('bm-mrr', (me.mrr??0).toFixed? (me.mrr??0).toFixed(2):me.mrr||'—');
+  setText('bm-recall', (me.context_recall??0).toFixed? (me.context_recall??0).toFixed(2):me.context_recall||'—');
+  setText('bm-noise', (me.noise_ratio??0).toFixed? (me.noise_ratio??0).toFixed(2):me.noise_ratio||'—');
+  setText('bm-q', me.evaluated_queries??'—');
+  const cats = DATA.categories||{};
+  // prefix the section titles with the run package name being evaluated
+  const runName = CURRENT_RUN || '';
+  const catTitle = document.getElementById('cat-title');
+  if(catTitle) catTitle.textContent = runName ? `${runName} - Category scores (weighted)` : 'Category scores (weighted)';
+  const pdTitle = document.getElementById('perdoc-title');
+  if(pdTitle) pdTitle.textContent = runName ? `${runName} - Per-document scores` : 'Per-document scores';
+  document.getElementById('cat-bars').innerHTML = Object.keys(CAT_LABELS).filter(k=>k in cats).map(k=>{
+    const v = cats[k];
+    return `<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:13px">
+       <span>${CAT_LABELS[k]} <span style="color:var(--faint);font-family:var(--mono);font-size:11px">w${WEIGHTS[k]}%</span></span>
+       <span class="score ${scoreClass(v)}">${v}</span></div>
+     <div class="bar ${barClass(v)}"><i style="width:${v}%"></i></div></div>`;}).join('')
+    || '<div class="note" style="color:var(--faint)">No benchmark for the current run</div>';
+  document.getElementById('doc-rows').innerHTML = (DATA.documents||[]).map(d=>{
+    const t = d.type==='runbook'?'rb':d.type==='kedb'?'kb':'doc';
+    const actions = (LIVE && d.file)
+      ? `<div class="row-actions"><button onclick="viewDoc('${d.file}')">View</button>
+         <button onclick="downloadOne('${d.file}')">Download</button></div>`
+      : '';
+    return `<tr><td class="mono">${d.id}</td><td><span class="tag ${t}">${d.type}</span></td>
+      <td class="score ${scoreClass(d.policy)}">${d.policy}</td>
+      <td class="score ${scoreClass(d.bm25)}">${d.bm25}</td>
+      <td class="score ${scoreClass(d.chunking)}">${d.chunking}</td>
+      <td style="text-align:right">${actions}</td></tr>`;}).join('')
+    || '<tr><td class="empty" colspan="6" style="color:var(--faint);padding:10px">No documents</td></tr>';
+  renderCategoryDiagnostics();
+}
+
+// v15.3 (Proposal 2): under the weighted bars, explain which categories scored
+// low, why, and what raises them. Advisory only — no document is rewritten.
+function renderCategoryDiagnostics(){
+  const host = document.getElementById('cat-diagnostics');
+  if(!host) return;
+  const diag = DATA.diagnostics || DEMO.diagnostics || [];
+  if(!diag.length){
+    host.innerHTML = `<div class="note" style="color:var(--faint);border-top:1px solid var(--line);padding-top:14px">
+      All weighted categories meet the readiness threshold — no corrective action required.</div>`;
+    return;
+  }
+  const esc = s => String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const cards = diag.map(w=>{
+    const causes = (w.observed_causes||[]).map(c=>
+      `<li><span class="sev ${esc(c.severity||'medium')}">${esc(c.severity||'medium')}</span>
+        ${esc(c.cause)}${c.document_count?` <span style="color:var(--faint)">(×${c.document_count} doc${c.document_count>1?'s':''})</span>`:''}</li>`).join('');
+    const causeBlock = causes
+      ? `<div style="margin-top:8px"><div class="diag-label">Causes</div><ul class="diag-list">${causes}</ul></div>`
+      : `<div style="margin-top:8px"><div class="diag-label">Cause</div>
+          <div style="color:var(--muted);font-size:13px">${esc(w.cause_summary)}</div></div>`;
+    const actions = (w.actions||[]).map(a=>`<li>${esc(a)}</li>`).join('');
+    return `<div class="diag-card">
+      <div class="diag-head">
+        <span><b>${esc(w.label)}</b> <span style="color:var(--faint);font-family:var(--mono);font-size:11px">w${w.weight}%</span></span>
+        <span class="score ${scoreClass(w.score)}">${w.score} <span style="color:var(--faint);font-weight:400">/ ${w.threshold}</span></span>
+      </div>
+      ${causeBlock}
+      <div style="margin-top:10px"><div class="diag-label">What to do to raise it</div>
+        <ul class="diag-list">${actions}</ul></div>
+      ${w.affected_documents?`<div class="diag-foot">Affects ${w.affected_documents} document${w.affected_documents>1?'s':''} in this run.</div>`:''}
+    </div>`;}).join('');
+  host.innerHTML = `<div class="diag-title">Weak categories — cause &amp; action</div>${cards}`;
+}
+
+function renderFeedback(){
+  const failing = (DATA.feedback||[]).length;
+  const dec = document.getElementById('fb-decision');
+  dec.textContent = failing? "Hold for remediation":"Promote";
+  dec.className = "pill "+(failing?"warn":"ok");
+  const grpBtn = document.getElementById('fb-apply-group');
+  if(grpBtn){ grpBtn.style.display = (LIVE && failing)? 'inline-block':'none'; }
+  document.getElementById('fb-summary').textContent = failing
+    ? `${failing} document(s) below the readiness threshold. Apply corrective feedback to complete the missing/renamed parts, then the series re-runs Regeneration → Benchmark → Feedback → Packages.`
+    : "All documents meet the readiness threshold. The package is eligible for promotion to RAG ingestion.";
+  document.getElementById('fb-list').innerHTML = (DATA.feedback||[]).map((f,i)=>{
+    const file = f.filename || '';
+    const applyBtn = (LIVE && file)
+      ? `<button class="btn ghost fb-apply" onclick="applyFeedbackOne('${file}', this)"
+           title="Complete this document's missing/renamed parts, then re-run the cycle">Apply Corrective Feedback</button>`
+      : '';
+    return `<div class="feed-item"><div class="feed-head">
+       <h4>${f.document_id} <span class="sev ${f.severity||'medium'}">${f.severity||'medium'}</span></h4>
+       ${applyBtn}</div>
+     <div>${(f.issues&&f.issues[0]&&f.issues[0].message)||f.message||''}</div></div>`;}).join('')
+    || `<div class="card"><div class="note">No corrective feedback for this run.</div></div>`;
+}
+
+// ---- shared version-mode chooser (same -> Remediated v* / new -> Update v*) ----
+let _modeResolver = null;
+function chooseVersionMode(title){
+  const ov = document.getElementById('mode-overlay');
+  const tt = document.getElementById('mode-title');
+  if(tt) tt.textContent = title || 'Apply corrective feedback';
+  ov.classList.add('show');
+  return new Promise(res=>{ _modeResolver = res; });
+}
+function resolveMode(mode){
+  document.getElementById('mode-overlay').classList.remove('show');
+  const r = _modeResolver; _modeResolver = null;
+  if(r) r(mode);
+}
+
+// apply corrective feedback to one document, then re-run the cycle
+async function applyFeedbackOne(file, btn){
+  if(!LIVE || !CURRENT_RUN) return;
+  const mode = await chooseVersionMode('Apply Corrective Feedback');
+  if(!mode) return;
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Correcting…';
   try{
-    const r=await fetch('/indexes'); const data=await r.json();
-    const cols=data.collections||[];
-    if(!cols.length){
-      $('#ix-cards').innerHTML='<div class="hint">no indexed collections yet — upload a document first</div>';
+    const r = await fetch(`${runApiBase()}/apply-feedback`, {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({file, use_ai:true, mode})});
+    const res = await r.json().catch(()=>({}));
+    if(r.status !== 200){ btn.textContent = res.error||'failed'; btn.classList.add('down');
+      setTimeout(()=>{btn.textContent=original;btn.disabled=false;btn.classList.remove('down');},2600); return; }
+    if(res.full_state){ applyFullState(res.full_state); renderAll(); }
+    btn.textContent = `✓ ${res.version_label||res.new_file||'done'}`;
+    btn.classList.add('live');
+    // surface the new score on the benchmark sub
+    const sub = document.getElementById('bm-sub');
+    if(sub && res.full_state) sub.textContent =
+      `${CURRENT_RUN} — ${res.version_label||res.new_file} → overall ${res.full_state.benchmark.overall}/100`;
+  }catch(err){ btn.textContent='failed'; btn.disabled=false; }
+}
+
+// apply corrective feedback across all failing documents, then re-run the cycle
+async function applyFeedbackGroup(btn){
+  if(!LIVE || !CURRENT_RUN) return;
+  const mode = await chooseVersionMode('Apply Corrective Feedback in Group');
+  if(!mode) return;
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Applying to all…';
+  try{
+    const r = await fetch(`${runApiBase()}/apply-feedback-group`, {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({use_ai:true, mode})});
+    const res = await r.json().catch(()=>({}));
+    if(r.status !== 200){ btn.textContent = res.error||'failed'; btn.classList.add('down');
+      setTimeout(()=>{btn.textContent=original;btn.disabled=false;btn.classList.remove('down');},2600); return; }
+    if(res.full_state){ applyFullState(res.full_state); renderAll(); }
+    btn.textContent = `✓ ${res.version_label?res.version_label+' · ':''}corrected ${res.corrected_count}`;
+    btn.classList.add('live');
+    // walk the chain so the user sees the result land in Packages
+    setNav('benchmark'); await beat(700);
+    setNav('feedback');  await beat(700);
+    setNav('packages');
+  }catch(err){ btn.textContent='failed'; btn.disabled=false; }
+}
+
+function renderPackages(){
+  function pkgScore(d){return d.overall!=null?d.overall:Math.round((d.policy+d.bm25+d.chunking)/3)}
+  const runPill = document.getElementById('pkg-run');
+  if(runPill){ runPill.textContent = CURRENT_RUN || (LIVE?'no run yet':'demo'); }
+  const zipBtn = document.getElementById('pkg-zip');
+  if(zipBtn){ zipBtn.disabled = !(LIVE && CURRENT_RUN); }
+  const regenGrpBtn = document.getElementById('pkg-regen-group');
+  if(regenGrpBtn){ regenGrpBtn.style.display = (LIVE && (DATA.feedback||[]).length)? 'inline-block':'none'; }
+  // index documents that have corrective feedback (by filename and by id)
+  const fbFiles = new Set(), fbIds = new Set();
+  (DATA.feedback||[]).forEach(f=>{
+    if(f.filename) fbFiles.add(f.filename);
+    if(f.document_id) fbIds.add(String(f.document_id));
+  });
+  function hasFeedback(d){
+    if(fbFiles.has(d.file)) return true;
+    // fall back to matching the embedded id/object when filename is absent
+    for(const id of fbIds){ if(d.file && (d.file.includes(id) || id.includes(d.file))) return true; }
+    return false;
+  }
+  const typeFilter = (document.getElementById('pkg-type-filter')||{}).value || 'all';
+  const pkgDocs = (DATA.documents||[]).filter(d=>{
+    if(typeFilter==='all') return true;
+    if(typeFilter==='doc') return d.type==='doc' || d.artifact_type==='interface_inventory';
+    return d.type===typeFilter;
+  });
+  const _pkgTable = document.getElementById('pkg-rows').closest('table');
+  if(_pkgTable) _pkgTable.classList.toggle('hide-docid',
+    pkgDocs.length>0 && pkgDocs.every(d=>d.type==='doc'));
+  document.getElementById('pkg-rows').innerHTML = pkgDocs.map(d=>{
+    const t = d.type==='runbook'?'rb':d.type==='kedb'?'kb':'doc';
+    const sc = pkgScore(d);
+    const ver = d.version || (d.file&&(d.file.match(/_v(\d+)\.md$/)||[])[0]?.slice(1)) || 'v1';
+    const regen = (LIVE && hasFeedback(d))
+      ? `<button class="regen" onclick="regenerateDoc('${d.file}', this)" title="Apply the feedback's regeneration hints and write a new version">Regenerate</button>`
+      : '';
+    const actions = LIVE
+      ? `<button onclick="viewDoc('${d.file}')">View</button>
+         <button onclick="downloadOne('${d.file}')">Download</button>${regen}`
+      : `<button onclick="askOverwrite('${d.file}')">Update…</button>`;
+    return `<tr><td class="mono" style="font-size:12px;color:var(--teal)">${d.id||'—'}</td>
+      <td class="mono" style="font-size:12px">${d.file}</td><td><span class="tag ${t}">${d.type}</span></td>
+      <td class="mono">${ver}</td><td class="score ${scoreClass(sc)}">${sc}</td>
+      <td class="row-actions">${actions}</td></tr>`;}).join('')
+    || '<tr><td class="empty" colspan="6" style="color:var(--faint);padding:10px">No packages yet — run a generation</td></tr>';
+}
+
+// regenerate one document by applying its corrective-feedback hints (new version)
+async function regenerateDoc(file, btn){
+  if(!LIVE || !CURRENT_RUN) return;
+  const mode = await chooseVersionMode('Regenerate');
+  if(!mode) return;
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Regenerating…';
+  try{
+    const r = await fetch(`${runApiBase()}/regenerate`, {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({file, mode})});
+    const res = await r.json().catch(()=>({}));
+    if(r.status !== 200){
+      btn.textContent = res.error || 'failed'; btn.classList.add('down');
+      setTimeout(()=>{btn.textContent=original; btn.disabled=false; btn.classList.remove('down');}, 2600);
       return;
     }
-    $('#ix-cards').innerHTML=cols.map(c=>`<div class="ix-card">
-      <div class="name">${esc(c.collection)}</div>
-      <div class="pts">${c.points}<small>points</small></div></div>`).join('');
-    const rows=cols.map(c=>`<tr>
-      <td>${esc(c.collection)}</td>
-      <td class="r">${c.documents}</td>
-      <td class="r">${c.points}</td>
-      <td class="r">${c.indexed_vectors}</td>
-      <td><span class="dot ${c.status}"></span>${c.status}</td></tr>`).join('');
-    const t=data.totals||{};
-    $('#ix-table').innerHTML=`<table class="ix">
-      <thead><tr><th>Collection</th><th class="r">Documents</th><th class="r">Points</th>
-        <th class="r">Indexed vectors</th><th>Status</th></tr></thead>
-      <tbody>${rows}</tbody>
-      <tfoot><tr><td>total</td><td class="r">${t.documents||0}</td>
-        <td class="r">${t.points||0}</td><td class="r">${t.indexed_vectors||0}</td><td></td></tr></tfoot>
-    </table>`;
-  }catch(e){ $('#ix-cards').innerHTML=`<div class="banner err">${esc(e.message)}</div>`; }
+    btn.textContent = `✓ ${res.version_label || (res.new_file?res.new_file.match(/_v\d+/)[0]:'v2')}`;
+    btn.classList.add('live');
+    // refresh packages so the new version appears
+    if(res.full_state){ applyFullState(res.full_state); renderAll(); }
+  }catch(err){
+    btn.textContent = 'failed'; btn.disabled=false;
+  }
 }
 
-async function post(path,body){
-  const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  return {status:r.status, data:await r.json()};
-}
-function busy(btn,on,label){ btn.disabled=on; btn.innerHTML=on?'<span class="spin"></span>'+label:label; }
-function esc(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
-
-const CAT_LABELS={
-  ingestion_policy_compliance:'policy compliance', bm25_authoring_readiness:'bm25 readiness',
-  chunking_quality:'chunking quality', retrieval_precision:'retrieval precision',
-  retrieval_recall:'retrieval recall', answer_faithfulness:'answer faithfulness',
-  citation_accuracy:'citation accuracy'
-};
-function scorecard(composite,status,cats){
-  const bars=Object.entries(cats).map(([k,v])=>`
-    <div class="bar"><span>${CAT_LABELS[k]||k}</span>
-      <span class="track"><span class="fill" style="width:${Math.max(0,Math.min(100,v))}%"></span></span>
-      <span class="val">${Number(v).toFixed(0)}</span></div>`).join('');
-  return `<div class="scorecard">
-    <div class="big"><span class="num s-${status}">${Number(composite).toFixed(1)}</span>
-      <span class="st s-${status}">${(status||'').replace(/_/g,' ')}</span></div>
-    <div class="bars">${bars}</div></div>`;
-}
-
-// FILE LOADING (drag & drop + browse)
-const CHUNK_DEFAULTS={bm25_typed:[400,80],procedure:[400,80],paragraph:[800,120],fixed:[1000,100]};
-function applyChunkDefaults(){
-  const m=$('#cc-mode').value; const [s,o]=CHUNK_DEFAULTS[m]||[400,80];
-  $('#cc-size').value=s; $('#cc-overlap').value=o;
-  $('#cc-hint').textContent=`profile default: size ${s} · overlap ${o}`;
-}
-$('#cc-mode').onchange=applyChunkDefaults;
-
-function loadFile(file){
-  if(!file) return;
-  $('#up-name').value=file.name;
-  const r=new FileReader();
-  r.onload=()=>{ $('#up-text').value=r.result; };
-  r.readAsText(file);
-}
-$('#browse-btn').onclick=()=>$('#file-in').click();
-$('#file-in').onchange=e=>loadFile(e.target.files[0]);
-const dz=$('#drop');
-['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag');}));
-['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag');}));
-dz.addEventListener('drop',e=>{ if(e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]); });
-
-// UPLOAD
-$('#up-go').onclick=async()=>{
-  const btn=$('#up-go'); busy(btn,true,'Score & index');
+// regenerate the whole failing group — same behaviour as "Apply Corrective Feedback in Group"
+async function regenerateGroup(btn){
+  if(!LIVE || !CURRENT_RUN) return;
+  const mode = await chooseVersionMode('Regenerate the Group');
+  if(!mode) return;
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Regenerating group…';
   try{
-    const {status,data}=await post('/upload',{
-      filename:$('#up-name').value, text:$('#up-text').value,
-      chunk_mode:$('#cc-mode').value,
-      chunk_size:Number($('#cc-size').value)||null,
-      chunk_overlap:Number($('#cc-overlap').value)||null
+    const r = await fetch(`${runApiBase()}/apply-feedback-group`, {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({use_ai:true, mode})});
+    const res = await r.json().catch(()=>({}));
+    if(r.status !== 200){ btn.textContent = res.error||'failed'; btn.classList.add('down');
+      setTimeout(()=>{btn.textContent=original;btn.disabled=false;btn.classList.remove('down');},2600); return; }
+    if(res.full_state){ applyFullState(res.full_state); renderAll(); }
+    btn.textContent = `✓ ${res.version_label?res.version_label+' · ':''}regenerated ${res.corrected_count}`;
+    btn.classList.add('live');
+    setNav('benchmark'); await beat(700);
+    setNav('feedback');  await beat(700);
+    setNav('packages');
+  }catch(err){ btn.textContent='failed'; btn.disabled=false; }
+}
+
+// ---- download + document viewer (live mode) ----
+function downloadZip(){
+  if(!CURRENT_RUN) return;
+  window.location.href = `/api/runs/${CURRENT_RUN}/download`;
+}
+function downloadOne(file){
+  // single-file download via a data link built from the doc endpoint
+  if(!CURRENT_RUN) return;
+  fetch(`${runApiBase()}/doc?file=${encodeURIComponent(file)}`)
+    .then(r=>r.json()).then(d=>{
+      const blob = new Blob([d.content],{type:'text/markdown'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = file; a.click();
+      URL.revokeObjectURL(a.href);
     });
-    const out=$('#up-out');
-    if(status===201){
-      const cats=data.categories||{};
-      const iss=(data.issues||[]).map(i=>`<li>${esc(i)}</li>`).join('');
-      out.innerHTML=`<div class="banner ok">indexed · doc #${data.document_id} · ${data.chunks} chunks · mode ${data.chunk_mode||'bm25_typed'} · signature ${data.signature.slice(0,16)}…</div>`
-        + scorecard(data.quality, data.quality_status, cats)
-        + (iss?`<div class="issues">issues<ul>${iss}</ul></div>`:'');
-    }else if(status===409){
-      out.innerHTML=`<div class="banner err">duplicate · signature ${data.signature.slice(0,16)}… already exists</div>`;
-    }else if(status===422){
-      const iss=(data.issues||[]).map(i=>`<li>${esc(i)}</li>`).join('');
-      out.innerHTML=`<div class="banner err">rejected · score ${data.quality} (${(data.quality_status||'').replace(/_/g,' ')}) below threshold</div>
-        ${iss?`<div class="issues">issues<ul>${iss}</ul></div>`:''}`;
-    }else{ out.innerHTML=`<div class="banner err">${esc(data.error||'error')}</div>`; }
-  }catch(e){ $('#up-out').innerHTML=`<div class="banner err">${esc(e.message)}</div>`; }
-  busy(btn,false,'Score & index');
-};
+}
+let VIEW_FILE = null;
+function viewDoc(file){
+  if(!CURRENT_RUN) return;
+  VIEW_FILE = file;
+  fetch(`${runApiBase()}/doc?file=${encodeURIComponent(file)}`)
+    .then(r=>r.json()).then(d=>{
+      document.getElementById('doc-title').textContent = `${d.subdir}/ ${d.file}`;
+      document.getElementById('doc-body').textContent = d.content;
+      document.getElementById('doc-overlay').classList.add('show');
+    });
+}
+function closeDoc(){document.getElementById('doc-overlay').classList.remove('show');VIEW_FILE=null;}
+function downloadDoc(){ if(VIEW_FILE) downloadOne(VIEW_FILE); }
 
-// SEARCH
-$('#s-go').onclick=async()=>{
-  const btn=$('#s-go'); busy(btn,true,'Search');
-  const body={query:$('#s-q').value, top_k:Number($('#s-k').value)||5,
-    customer_id:$('#s-cust').value||null, system_id:$('#s-sys').value||null,
-    artifact_type:$('#s-art').value||null};
+function setText(id,val){const el=document.getElementById(id); if(el) el.textContent=val;}
+
+// map server full-state into the DATA shape this dashboard expects
+function applyFullState(fs){
+  const bench = fs.benchmark||{}; const mon = fs.monitoring||{}; const fb = fs.feedback||{};
+  const gen = fs.generation||{};
+  DATA = {
+    overall: bench.overall, status: bench.status,
+    profile: bench.profile, faithfulness_status: bench.faithfulness_status,
+    categories: bench.categories || {},
+    metrics: bench.metrics || {},
+    documents: bench.documents || [],
+    diagnostics: bench.category_diagnostics || [],
+    mpl: (mon.recent_mpl||[]).map(x=>({guid:x.guid,iface:x.iface,exception:x.exception,err:x.err,ts:x.ts})),
+    feedback: fb.items || [],
+    monitoring: {
+      failed_messages: mon.failed_messages,
+      completed: mon.completed,
+      interfaces_watched: mon.interfaces_watched,
+      error_patterns: mon.error_patterns,
+      by_platform: mon.by_platform,
+      sources_connected: mon.sources_connected,
+      interfaces_by_platform: mon.interfaces_by_platform,
+      eligibility: {
+        eligible: gen.eligible_patterns||0,
+        ineligible: gen.ineligible||0,
+        reasons: gen.ineligibility_reasons||{},
+        by_platform: gen.eligibility_by_platform||{},
+      },
+      error_patterns_by_object: mon.error_patterns_by_object,
+      corpus: mon.corpus||{distinct_patterns:0,patterns:[],top_patterns:[],by_source:{},available_months:[],selected_months:[]},
+    },
+  };
+  if(!DATA.documents.length && fs.packages) DATA.documents = fs.packages;
+  // feed the "What will be produced" panel with this run's KB+RB packages so it
+  // fills like the interface_inventory panel (kept in sync on every renderAll).
+  PAIR_DOCS = (fs.packages||[]).filter(d=>d && (d.type==='kedb'||d.type==='runbook'));
+  CURRENT_RUN = fs.run_id || CURRENT_RUN;
+}
+
+// Select an independent INV inventory run to benchmark (reuses the RUN picker
+// modal). Lists inventory_runs/INV-NNN newest-first; the chosen INV is scored
+// with the adapted interface_inventory profile.
+async function openInvPicker(){
+  const ov = document.getElementById('run-overlay');
+  const list = document.getElementById('run-list');
+  if(!ov || !list) return;
+  if(!LIVE){
+    list.innerHTML = '<p class="note" style="color:var(--amber)">Live INV selection needs the server. '+
+      'Start it with <code>python -m orchestrator.server</code>.</p>';
+    ov.classList.add('show'); return;
+  }
+  list.innerHTML = '<p class="note">Loading INV runs…</p>';
+  ov.classList.add('show');
   try{
-    const {data}=await post('/search',body);
-    const hits=(data.hits||[]).map(h=>`<div class="hit">
-      <div class="meta"><span class="tag">#${h.rank}</span><span>doc ${h.document_id}·chunk ${h.chunk_index}</span>
-        <span>${h.section_type}</span><span>${h.artifact_type}</span><span>score ${h.score}</span></div>
-      <div class="snip">${esc(h.snippet)}</div></div>`).join('');
-    $('#s-out').innerHTML = hits || `<div class="banner err">no matches</div>`;
-  }catch(e){ $('#s-out').innerHTML=`<div class="banner err">${esc(e.message)}</div>`; }
-  busy(btn,false,'Search');
-};
-
-// ANSWER
-$('#a-go').onclick=async()=>{
-  const btn=$('#a-go'); busy(btn,true,'Generate answer');
-  const body={query:$('#a-q').value, top_k:Number($('#a-k').value)||5,
-    customer_id:$('#a-cust').value||null, system_id:$('#a-sys').value||null,
-    artifact_type:$('#a-art').value||null};
+    const r = await fetch('/api/inventory/runs');
+    const runs = (await r.json()).inv_runs || [];
+    if(!runs.length){
+      list.innerHTML = '<p class="note">No INV runs yet. Click “Generate interface_inventory_docs” first.</p>';
+      return;
+    }
+    list.innerHTML = runs.map(run=>`
+      <div class="run-row" onclick="runInvBenchmarkOn('${run.inv_run_id}')">
+        <div>
+          <div class="run-id">${run.inv_run_id}</div>
+          <div class="run-meta">${run.documents} document(s)${run.has_benchmark?' · benchmarked':''}${run.mpl_source?' · MPL '+run.mpl_source:''}</div>
+        </div>
+        <span class="run-go">Benchmark ▸</span>
+      </div>`).join('');
+  }catch(err){
+    list.innerHTML = `<p class="note" style="color:var(--red)">Failed to load INV runs: ${err.message}</p>`;
+  }
+}
+async function runInvBenchmarkOn(invId){
+  closeRunPicker();
+  if(!LIVE || !invId) return;
+  CURRENT_RUN = invId;
+  // animated indicator at the head of the category-scores zone being computed
+  const _cb = document.getElementById('cat-bars');
+  if(_cb) _cb.innerHTML = '<div class="note">' + qkRunning('Benchmarking ' + invId + '…') + '</div>';
   try{
-    const {data}=await post('/answer',body);
-    const cites=(data.citations||[]).map(c=>`<span class="c">[${c.ref}] doc ${c.document_id}·${c.section_type}</span>`).join('');
-    $('#a-out').innerHTML=`<div class="answer"><div class="body">${esc(data.answer)}</div>
-      ${cites?`<div class="cites">${cites}</div>`:''}</div>`;
-  }catch(e){ $('#a-out').innerHTML=`<div class="banner err">${esc(e.message)}</div>`; }
-  busy(btn,false,'Generate answer');
-};
+    const r = await fetch(`/api/inventory/${invId}/benchmark`, {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({threshold:80})});
+    const res = await r.json().catch(()=>({}));
+    if(r.status !== 200) return;
+    if(res.full_state){ applyFullState(res.full_state); renderAll(); }
+    setNav('benchmark');
+  }catch(err){}
+}
 
-// BENCHMARK
-$('#b-go').onclick=async()=>{
-  const btn=$('#b-go'); busy(btn,true,'Run benchmark');
-  let qset;
-  try{ qset=JSON.parse($('#b-set').value); }
-  catch(e){ $('#b-out').innerHTML=`<div class="banner err">invalid JSON: ${esc(e.message)}</div>`; busy(btn,false,'Run benchmark'); return; }
+async function loadLive(){
+  // Render live connections FIRST and independently, so the system tiles and
+  // "N sources connected" show even if /api/full-state is slow, hangs, or errors.
+  refreshConnections();
   try{
-    const {data}=await post('/benchmark',{query_set:qset});
-    const d=data.dynamic||{};
-    const cats={retrieval_precision:d.retrieval_precision,retrieval_recall:d.retrieval_recall,
-      answer_faithfulness:d.answer_faithfulness,citation_accuracy:d.citation_accuracy};
-    const avg=(d.retrieval_precision+d.retrieval_recall+d.answer_faithfulness+d.citation_accuracy)/4;
-    const st=avg>=90?'enterprise_ready':avg>=80?'ready_minor':avg>=70?'conditional':avg>=60?'needs_remediation':'not_ready';
-    const rows=(data.per_query||[]).map(q=>`<div class="hit"><div class="meta">
-      <span>P ${q.precision}</span><span>R ${q.recall}</span><span>F ${q.faithfulness}</span>
-      <span>C ${q.citation_accuracy}</span><span>→ docs ${q.retrieved.join(', ')||'—'}</span></div>
-      <div class="snip">${esc(q.query)}</div></div>`).join('');
-    $('#b-out').innerHTML=scorecard(avg,st,cats)+rows;
-  }catch(e){ $('#b-out').innerHTML=`<div class="banner err">${esc(e.message)}</div>`; }
-  busy(btn,false,'Run benchmark');
-};
+    const r = await fetch('/api/full-state');
+    if(!r.ok) throw new Error('no server');
+    const fs = await r.json();
+    LIVE = true;
+    applyFullState(fs);
+  }catch(e){ /* keep DEMO */ }
+  // Render defensively: a failure in run/corpus rendering must NEVER stop the
+  // live connection overlay from running (that is what shows the 5 sources +
+  // system tiles). This is the fix for "0 sources connected" after v16.
+  try{ renderAll(); }catch(e){ console.error('renderAll failed:', e); }
+  // overlay live connection state on top of run-derived monitoring — always run
+  refreshConnections();
+  // populate the MPL archive month selector (server-only) — non-critical
+  try{ loadArchiveMonths(); }catch(e){ console.error('archive months failed:', e); }
+}
 
-// Dashboard is the starting page — load it on open.
-loadDashboard();
+// ---- live system connections (CPI / PI-PO / S4H) ----
+const MODE_DOT = {"Live MPL":"live","Local MPL":"local"};
+let CONNECTIONS = null;
+
+function modeDotClass(mode){ return MODE_DOT[mode] || "down"; }
+
+function renderConnections(conn){
+  CONNECTIONS = conn;
+  const rows = conn.rows || [];
+  const connected = rows.filter(r=>r.connected);
+
+  // sources-connected pill
+  const pill = document.getElementById('m-sources');
+  pill.textContent = (conn.sources_connected||0)+' sources connected';
+  pill.className = 'pill '+((conn.sources_connected||0)>0?'ok':'warn');
+
+  // aggregate metric tiles — only MPL-bearing systems (CPI/PIPO/S4H) count
+  // toward Failed/Completed; APIM and AEM are CPI sub-source detail rows.
+  const mpl = connected.filter(r=>r.platform==='CPI'||r.platform==='PIPO'||r.platform==='S4H');
+  const failed = mpl.reduce((a,r)=>a+(r.new_failed||0),0);
+  const completed = mpl.reduce((a,r)=>a+(r.completed||0),0);
+  setText('m-failed', failed);
+  setText('m-completed', completed.toLocaleString());
+  setText('m-completed-sub', mpl.length? `across ${mpl.length} connected system(s)`:'across connected systems');
+  setText('m-interfaces', conn.interfaces_watched||0);
+  const plats = [...new Set(mpl.map(r=>r.platform))];
+  setText('m-interfaces-sub', plats.map(p=>`${p} ✓`).join(' · ') || 'across platforms');
+
+  // SOURCES table — one dynamic row per configured system
+  const tb = document.getElementById('src-rows');
+  tb.innerHTML = rows.length ? rows.map(r=>{
+    const dot = modeDotClass(r.mode);
+    const failTxt = r.connected ? r.new_failed : '—';
+    return `<tr>
+      <td>${r.source}</td>
+      <td class="mono">${r.sap_sid}</td>
+      <td><span class="src"><span class="dot ${dot}"></span>${r.mode}</span></td>
+      <td>${r.window}</td>
+      <td class="mono">${failTxt}</td>
+      <td class="mono">${r.store_file||'—'}</td></tr>`;
+  }).join('') : '<tr><td class="empty" colspan="6" style="color:var(--faint);padding:10px">No sources configured in .env</td></tr>';
+
+  // per-system tiles, CPI-styled, one row each
+  const tiles = document.getElementById('sys-tiles');
+  const empty = document.getElementById('sys-empty');
+  if(rows.length){
+    empty.style.display='none';
+    // find the CPI tenant row so the "Recent failed messages" table can sit
+    // right after it (between CPI-RCA tenant and APIM-RCA), per spec.
+    const cpiIdx = rows.findIndex(r => (r.sap_sid==='CPI' && (r.platform==='CPI' || !r.platform)) );
+    const insertAfter = cpiIdx >= 0 ? cpiIdx : 0;
+    tiles.innerHTML = rows.map((r,idx)=>{
+      const cls = r.connected ? (r.mode.startsWith('Live')?'live':'local') : 'down';
+      const errShort = r.error ? ` · ${String(r.error).split(':')[0]}` : '';
+      const invSys = invSystemKey(r);
+      const invBtn = invSys
+        ? `<button class="invbtn" onclick="exportInventory('${invSys}', this)" title="Download all design objects and configurations for this system into ./inventory/${invSys}/">⤓ Inventory</button>`
+        : '';
+      const tile = `<div class="systile">
+        <div class="sys-head">
+          <div><span class="sys-name">${r.source}</span><span class="sys-sid">sap_sid=${r.sap_sid}${r.platform!==r.sap_sid?` · ${r.platform}`:''}</span></div>
+          <div class="sys-head-right">
+            <span class="statebadge ${cls}" title="${r.error?String(r.error).replace(/"/g,'&quot;'):r.detail||r.mode}">${r.mode}${errShort}</span>
+            ${invBtn}
+          </div>
+        </div>
+        <div class="sys-metrics">${metricsHtml(r)}</div>
+        ${extrasHtml(r)}</div>`;
+      // after the CPI tile, drop in the recent-failed-messages table
+      return idx===insertAfter ? tile + recentFailedTableHtml() : tile;
+    }).join('');
+    fillRecentFailedRows();
+  } else {
+    empty.style.display='block';
+    tiles.innerHTML='';
+  }
+
+  updateGenerationSources(rows);
+}
+
+// map a connected-system row to its inventory system key
+function invSystemKey(r){
+  const k = (r.kind||'').toLowerCase();
+  if(k==='apim') return 'apim';
+  if(k==='aem') return 'aem';
+  if(k==='pipo') return 'pipo';
+  if(k==='s4h_evidence') return 's4h';
+  if(r.platform==='CPI') return 'cpi';
+  if(r.platform==='PIPO') return 'pipo';
+  if(r.platform==='S4H') return 's4h';
+  return '';
+}
+
+// export a system's design inventory, then download the .zip; "system
+// unavailable" surfaces when the system is not live/configured.
+async function exportInventory(system, btn){
+  if(!LIVE){
+    flashBtn(btn, 'needs server', 'down'); return;
+  }
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Exporting…';
+  try{
+    const r = await fetch(`/api/inventory/${system}/export`, {method:'POST',
+      headers:{'Content-Type':'application/json'}, body:'{}'});
+    const res = await r.json().catch(()=>({}));
+    if(r.status !== 200 || res.status !== 'ok'){
+      flashBtn(btn, 'system unavailable', 'down', original); return;
+    }
+    flashBtn(btn, '✓ exported', 'live', original);
+    // download the freshly exported package
+    window.location.href = `/api/inventory/${system}/download`;
+  }catch(err){
+    flashBtn(btn, 'system unavailable', 'down', original);
+  }
+}
+function flashBtn(btn, text, cls, restore){
+  btn.textContent = text;
+  btn.classList.remove('live','down'); if(cls) btn.classList.add(cls);
+  setTimeout(()=>{ if(restore){ btn.textContent = restore; btn.disabled=false;
+    btn.classList.remove('live','down'); } }, 2600);
+}
+
+// render the right card set per source kind (mirrors the dedicated screens)
+function cell(label,val,cls){
+  const c = cls||''; const border = c?('c-'+ (c==='ok'?'teal':c==='fail'?'red':c==='warnv'?'amber':c)) : '';
+  return `<div class="mcell ${border}"><div class="sm-label">${label}</div><div class="sm-val ${c}">${val}</div></div>`;
+}
+function num(v){return (v==null)?'—':(typeof v==='number'?v.toLocaleString():v);}
+function metricsHtml(r){
+  const m = r.metrics||{}; const on = r.connected;
+  if(r.platform==='CPI' && r.kind==='mpl'){
+    // SAP CPI Monitoring Events cards (Success / Failed / Retry / Total / Deployed iFlows)
+    return cell('Success Mes.', on?num(m.success):'—','ok')
+         + cell('Failed Mes.', on?num(m.failed):'—','fail')
+         + cell('Retry Mes.', on?num(m.retry):'—','warnv')
+         + cell('Total Mes.', on?num(m.total):'—','blue')
+         + cell('Deployed iFlows', on?num(m.deployed_iflows):'—','warnv');
+  }
+  if(r.kind==='apim'){
+    return cell('Total calls', on?num(m.total_calls):'—','blue')
+         + cell('Success', on?num(m.success):'—','ok')
+         + cell('Error rate 4xx/5xx', on?num(m.error_rate):'—','fail')
+         + cell('Policy faults', on?num(m.policy_faults):'—','warnv')
+         + cell('Avg latency ms', on?num(m.avg_latency_ms):'—','blue');
+  }
+  if(r.kind==='aem'){
+    return cell('Messages published', on?num(m.published):'—','blue')
+         + cell('Messages delivered', on?num(m.delivered):'—','ok')
+         + cell('DMQ messages', on?num(m.dmq):'—','fail')
+         + cell('Queue backlog', on?num(m.queue_backlog):'—','warnv')
+         + cell('Consumer disconnects', on?num(m.consumer_disconnects):'—','warnv')
+         + cell('Spooled total', on?num(m.spooled):'—','blue');
+  }
+  if(r.kind==='pipo'){
+    // PI/PO full indicators (live MPL) — Success / Failed / Retry / Total / Deployed iFlows
+    return cell('Success Mes.', on?num(m.success):'—','ok')
+         + cell('Failed Mes.', on?num(m.failed):'—','fail')
+         + cell('Waiting Mess.', on?num(m.waiting):'—','warnv')
+         + cell('Total Mes.', on?num(m.total):'—','blue')
+         + cell('Deployed Interfaces', on?num(m.deployed_iflows):'—','warnv');
+  }
+  if(r.kind==='s4h_evidence'){
+    // per-monitor status dot from the connector's per-set diagnostics: a set
+    // that failed shows an amber dot on ITS card (not a global error); OK sets
+    // show a teal dot with a count/latency tooltip. Absent in local mode.
+    const ss = (m.set_status)||[];
+    const byMon = {}, byES = {}; ss.forEach(s=>{ byMon[s.monitor]=s; byES[s.entity_set]=s; });
+    // idoc_inbound & idoc_outbound share ONE entity set (IDocErrorSet), so the
+    // OUT card looks up the shared set's status when it has no own entry.
+    const cardES = {idoc_inbound:'IDocErrorSet', idoc_outbound:'IDocErrorSet',
+                    sm58:'TRFCErrorSet', qrfc:'QRFCErrorSet', slg1:'AppLogErrorSet', st22:'ShortDumpSet'};
+    const dot = (mon)=>{ const s = byMon[mon] || byES[cardES[mon]]; if(!s) return '';
+      if(s.status==='ERROR') return `<span class="sdot deg" title="degraded: HTTP ${s.http||'?'} ${(s.error||'').replace(/"/g,'')}"></span>`;
+      return `<span class="sdot ok" title="ok · ${num(s.count)} rows · ${s.ms||0} ms"></span>`; };
+    // dot on the LEFT, then label + transaction chip (same size, brighter).
+    const c = (label,tc,mon,val,cls)=> cell(
+      `<span class="s4h-head">${dot(mon)}<span class="s4h-txt">${label}</span><span class="s4h-tc">${tc}</span></span>`,
+      on?num(val):'—', cls);
+    return c('IDoc in err','WE05','idoc_inbound', m.idoc_inbound_err,'fail')
+         + c('IDoc out err','WE05','idoc_outbound', m.idoc_outbound_err,'fail')
+         + c('SM58 failed','SM58','sm58', m.sm58_failed,'warnv')
+         + c('qRFC stuck','SMQ1/2','qrfc', m.qrfc_stuck,'warnv')
+         + c('SLG1 errors','SLG1','slg1', m.slg1_errors,'warnv')
+         + c('ABAP dumps','ST22','st22', m.st22_dumps,'fail');
+  }
+  // default MPL (fallback)
+  return cell(`Failed (${r.window})`, on?num(r.new_failed):'—','fail')
+       + cell('Completed', on?num(r.completed):'—','ok')
+       + cell('Store file', r.store_file||'—');
+}
+
+// extended detail shown below a tile's metric row (APIM tables+chart, PI/PO breakdown)
+function miniTable(title, cols, rows){
+  const head = cols.map(c=>`<th${c.r?' style="text-align:right"':''}>${c.t}</th>`).join('');
+  const body = rows.map(rw=>`<tr>${cols.map(c=>`<td class="${c.mono?'mono':''}"${c.r?' style="text-align:right"':''}>${rw[c.k]}</td>`).join('')}</tr>`).join('');
+  // when a list has more than 10 rows, make the body scrollable (sticky header)
+  const scroll = rows.length > 10 ? ' mini-scroll' : '';
+  return `<div class="subcard"><div class="subhead">${title}</div>
+    <div class="mini-wrap${scroll}"><table class="mini"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div></div>`;
+}
+// S4H detail gadget: dual-scroll table (horizontal for readable columns +
+// vertical ashensor). Escapes cell text (error strings may contain <, >, &).
+function s4hDetail(title, cols, rows){
+  const esc = s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const head = cols.map(c=>`<th${c.r?' style="text-align:right"':''}>${c.t}</th>`).join('');
+  const body = rows.map(rw=>`<tr>${cols.map(c=>{
+    const v = c.k==='when' ? fmtTs(rw[c.k]) : esc(rw[c.k]);
+    return `<td class="${c.mono?'mono ':''}${c.wide?'wide':''}"${c.r?' style="text-align:right"':''}>${v}</td>`;
+  }).join('')}</tr>`).join('');
+  return `<div class="subcard"><div class="subhead">${title} · ${rows.length}</div>
+    <div class="mini-wrap dual-scroll"><table class="mini"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div></div>`;
+}
+function svgBars(success, failed){
+  // top padding (padTop) reserves space so the value label above a full-height
+  // bar never collides with the subcard title; base sits well below padTop.
+  const max = Math.max(success, failed, 1);
+  const h=110, w=70, gap=40, padTop=28, base=padTop+h+18;
+  const sH = Math.round(h*success/max), fH = Math.round(h*failed/max);
+  const vh = base + 30;
+  return `<svg viewBox="0 0 220 ${vh}" width="220" height="${vh}" role="img" aria-label="success vs failed">
+    <text x="${30+w/2}" y="${base-sH-7}" fill="var(--teal)" font-size="13" text-anchor="middle" font-family="var(--mono)">${success}</text>
+    <rect x="30" y="${base-sH}" width="${w}" height="${sH}" fill="var(--teal)" rx="3"/>
+    <text x="${30+w/2}" y="${base+18}" fill="var(--muted)" font-size="11" text-anchor="middle">Success</text>
+    <text x="${30+w+gap+w/2}" y="${base-fH-7}" fill="var(--red)" font-size="13" text-anchor="middle" font-family="var(--mono)">${failed}</text>
+    <rect x="${30+w+gap}" y="${base-fH}" width="${w}" height="${fH}" fill="var(--red)" rx="3"/>
+    <text x="${30+w+gap+w/2}" y="${base+18}" fill="var(--muted)" font-size="11" text-anchor="middle">Failed</text>
+  </svg>`;
+}
+// SVG donut gauge (Used% + sub-label) — mirrors the Solace Broker Manager summary
+function svgDonut(pct, big, sub){
+  pct = Math.max(0, Math.min(100, pct||0));
+  const r=54, c=2*Math.PI*r, off=c*(1-pct/100);
+  const col = pct>=90?'var(--red)':pct>=70?'var(--amber)':'var(--teal)';
+  return `<svg viewBox="0 0 150 150" width="150" height="150">
+    <circle cx="75" cy="75" r="${r}" fill="none" stroke="var(--line)" stroke-width="12"/>
+    <circle cx="75" cy="75" r="${r}" fill="none" stroke="${col}" stroke-width="12"
+      stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"
+      stroke-linecap="round" transform="rotate(-90 75 75)"/>
+    <text x="75" y="72" text-anchor="middle" font-size="26" font-weight="700" fill="var(--ink)">${big}</text>
+    <text x="75" y="98" text-anchor="middle" font-size="14" fill="var(--muted)">${sub}</text>
+  </svg>`;
+}
+function donutTile(label, pct, big, sub){
+  return `<div style="text-align:center;flex:1;min-width:150px">${svgDonut(pct, big, sub)}
+    <div class="sm-label" style="margin-top:2px">${label}</div></div>`;
+}
+function extrasHtml(r){
+  if(r.kind==='apim' && r.metrics && r.metrics.apim){
+    const a = r.metrics.apim;
+    const ia = a.integrations_apis||{}; const pt = a.proxy_traffic||{};
+    const pe = a.proxy_errors||{rows:[]};
+    const intg = `<div class="subcard"><div class="subhead">Integrations and APIs</div>
+      <div class="big ok">${num(ia.total)}</div><div class="sm-label">Total started artifacts</div>
+      <div class="kv"><span>Started</span><b class="ok">${num(ia.started)}</b></div>
+      <div class="kv"><span>Starting</span><b class="warnv">${num(ia.starting)}</b></div>
+      <div class="kv"><span>Stopping</span><b>${num(ia.stopping)}</b></div>
+      <div class="kv"><span>Error</span><b class="fail">${num(ia.error)}</b></div></div>`;
+    const chart = `<div class="subcard"><div class="subhead">Success vs Failed (API Proxy calls)</div>
+      <div style="display:flex;justify-content:center;padding-top:6px">${svgBars(pt.success||0, pt.failed||0)}</div></div>`;
+    const errs = miniTable('API Proxy Errors', [{t:'API Proxy',k:'name'},{t:'Errors',k:'count',r:true,mono:true}], pe.rows||[]);
+    const proxyTbl = miniTable('API Proxy breakdown',
+      [{t:'API Proxy',k:'name'},{t:'Total',k:'total',r:true,mono:true},{t:'Success',k:'success',r:true,mono:true},{t:'Failed',k:'failed',r:true,mono:true}],
+      a.api_proxy_breakdown||[]);
+    const provTbl = miniTable('API Provider',
+      [{t:'Provider',k:'name'},{t:'Host',k:'host',mono:true},{t:'Proxies',k:'proxies',r:true,mono:true}],
+      a.api_providers||[]);
+    const kvmTbl = miniTable('Key Value Maps',
+      [{t:'Map',k:'name'},{t:'Encrypted',k:'enc'},{t:'Entries',k:'entries',r:true,mono:true}],
+      (a.key_value_maps||[]).map(k=>({name:k.name, enc:k.encrypted?'Yes':'No', entries:k.entries})));
+    return `<div class="extras">
+      <div class="grid3">${intg}${chart}${errs}</div>
+      <div class="grid3">${proxyTbl}${provTbl}${kvmTbl}</div></div>`;
+  }
+  if(r.kind==='pipo'){
+    const bd = (r.metrics&&r.metrics.status_breakdown)||[];
+    if(!bd.length) return '';
+    return `<div class="extras">${miniTable(`Last ${(r.metrics&&r.metrics.window_hours)||24} h MPL status breakdown`,
+      [{t:'Status',k:'status'},{t:'Count',k:'count',r:true,mono:true}], bd)}
+      <div class="sm-label" style="margin-top:6px">Data source: ${r.metrics.data_source||'—'} · store ${r.store_file||'—'}</div></div>`;
+  }
+  if(r.kind==='aem'){
+    // AEM-RCA Broker VPN Summary — donut gauges (essential sub-group) like Solace
+    const s = (r.metrics&&r.metrics.summary)||null;
+    if(!s) return '';
+    const P=(cur,mx)=> mx>0 ? Math.round(cur/mx*100) : 0;
+    const spoolPct = s.spool_max_mb>0 ? Math.min(100, s.spool_used_mb/s.spool_max_mb*100) : 0;
+    const spoolBig = spoolPct>0 && spoolPct<1 ? '<1%' : Math.round(spoolPct)+'%';
+    const donuts = [
+      donutTile('Spool Usage', spoolPct, spoolBig, `${s.spool_used_mb}/${num(s.spool_max_mb)} MB`),
+      donutTile('Incoming Connections', P(s.connections_cur,s.connections_max), P(s.connections_cur,s.connections_max)+'%', `${num(s.connections_cur)}/${num(s.connections_max)}`),
+      donutTile('Queues & Endpoints', P(s.endpoints_cur,s.endpoints_max), P(s.endpoints_cur,s.endpoints_max)+'%', `${num(s.endpoints_cur)}/${num(s.endpoints_max)}`),
+      donutTile('Current Consumers', P(s.consumers_cur,s.consumers_max), P(s.consumers_cur,s.consumers_max)+'%', `${num(s.consumers_cur)}/${num(s.consumers_max)}`),
+    ].join('');
+    const upCol = s.status==='Up' ? 'ok' : 'fail';
+    return `<div class="extras"><div class="subcard">
+      <div class="subhead">AEM-RCA Broker VPN Summary — ${s.vpn}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-around;padding:14px 0 6px">${donuts}</div>
+      <div class="grid3" style="margin-top:6px">
+        <div class="subcard" style="text-align:center"><div class="subhead">Status</div><div class="big ${upCol}">${s.status}</div></div>
+        <div class="subcard" style="text-align:center"><div class="subhead">Subscriptions</div><div class="big blue">${num(s.subscriptions)}</div></div>
+        <div class="subcard" style="text-align:center"><div class="subhead">Messages Queued</div><div class="big">${num(s.messages_queued)}</div></div>
+      </div></div></div>`;
+  }
+  if(r.kind==='s4h_evidence'){
+    // Detail gadget below the S4H tiles + a soft 'degraded' note when a monitor
+    // set failed (the other sets still render). Both come from r.metrics.
+    const rows = (r.metrics&&r.metrics.detail_rows)||[];
+    const deg = ((r.metrics&&r.metrics.set_status)||[]).filter(s=>s.status==='ERROR');
+    const parts = [];
+    if(deg.length){
+      parts.push(`<div class="sm-label" style="color:#f2c14e;margin-bottom:6px">⚠ ${deg.length} monitor(s) degraded: ${deg.map(s=>`${s.entity_set} (HTTP ${s.http||'?'})`).join(', ')} — showing the sets that responded</div>`);
+    }
+    if(rows.length){
+      const cols=[{t:'Tcode',k:'tcode',mono:true},{t:'Object / ref',k:'ref',mono:true},
+                  {t:'Status',k:'status_code',mono:true},{t:'Error text',k:'text',wide:true},
+                  {t:'When',k:'when',mono:true}];
+      parts.push(s4hDetail('S/4HANA technical exceptions — detail', cols, rows));
+    }
+    return parts.length ? `<div class="extras">${parts.join('')}</div>` : '';
+  }
+  return '';
+}
+
+// generation source selector keyed by sap_sid (S4H value = the SID).
+// APIM and AEM are CPI sub-sources, so they fold into the CPI option.
+function updateGenerationSources(rows){
+  const sel = document.getElementById('gen-source');
+  if(!sel) return;
+  const mpl = (rows||[]).filter(r=>r.connected && (r.platform==='CPI'||r.platform==='PIPO'||r.platform==='S4H'));
+  if(!mpl.length) return; // keep existing options if nothing live
+  const seen = new Set(); const opts=[];
+  mpl.forEach(r=>{ if(seen.has(r.sap_sid)) return; seen.add(r.sap_sid);
+    const note = r.sap_sid==='CPI' ? ' (incl. APIM/AEM)' : '';
+    opts.push(`<option value="${r.sap_sid}">${r.sap_sid} — ${r.source}${note} (${r.new_failed} new, ${r.mode})</option>`);
+  });
+  if(seen.size>1) opts.push(`<option value="ALL">All sources (dedup on)</option>`);
+  sel.innerHTML = opts.join('');
+}
+
+async function refreshConnections(){
+  const btn = document.getElementById('m-refresh');
+  if(btn){ btn.disabled=true; btn.textContent='↻ Refreshing…'; }
+  try{
+    const r = await fetch('/api/connections');
+    if(!r.ok) throw new Error('no server');
+    renderConnections(await r.json());
+  }catch(e){
+    const pill=document.getElementById('m-sources');
+    if(pill){ pill.textContent='connections unavailable'; pill.className='pill warn'; }
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='↻ Refresh sources'; }
+  }
+}
+
+// generation — runs the real pipeline through the server, then advances the
+// run across every tab: Generation -> Benchmark -> Feedback -> Packages.
+let CURRENT_RUN = null;
+let INV_DOCS = [];
+let PAIR_DOCS = [];   // atomic KB+RB packages for the "What will be produced" panel
+// route feedback/regenerate actions to the INV endpoints when the current run
+// is an independent inventory run (INV-NNN-YYYYMMDD), else the standard runs.
+function runApiBase(){
+  return (CURRENT_RUN && String(CURRENT_RUN).startsWith('INV-'))
+    ? ('/api/inventory/' + CURRENT_RUN) : ('/api/runs/' + CURRENT_RUN);
+}
+// animated "in progress" indicator (moving ››› chevrons) for long-running actions
+function qkRunning(text){
+  return '<span class="qk-run"><i>&#8250;</i><i>&#8250;</i><i>&#8250;</i></span> ' + (text || '');
+}
+
+function setNav(stage){
+  const b = document.querySelector(`[data-s="${stage}"]`);
+  if(b) b.click();
+}
+
+// ---- Benchmark RUN selector ----
+async function openRunPicker(){
+  const ov = document.getElementById('run-overlay');
+  const list = document.getElementById('run-list');
+  if(!LIVE){
+    list.innerHTML = '<p class="note" style="color:var(--amber)">Live RUN selection needs the server. '+
+      'Start it with <code>python -m orchestrator.server</code>.</p>';
+    ov.classList.add('show'); return;
+  }
+  list.innerHTML = '<p class="note">Loading runs…</p>';
+  ov.classList.add('show');
+  try{
+    const r = await fetch('/api/runs');
+    const runs = (await r.json()).runs || [];
+    if(!runs.length){
+      list.innerHTML = '<p class="note">No runs with generated documents yet. '+
+        'Generate documents first on the Generation tab.</p>'; return;
+    }
+    list.innerHTML = runs.map(run=>`
+      <div class="run-row" onclick="runBenchmarkOn('${run.run_id}', ${run.has_benchmark?'true':'false'})">
+        <div>
+          <div class="run-id">${run.run_id}</div>
+          <div class="run-meta">${run.documents} document(s)${run.has_benchmark?' · benchmarked':''}${run.completed_at?' · '+run.completed_at.slice(0,10):''}</div>
+        </div>
+        <span class="run-go">Benchmark ▸</span>
+      </div>`).join('');
+  }catch(err){
+    list.innerHTML = `<p class="note" style="color:var(--red)">Failed to load runs: ${err.message}</p>`;
+  }
+}
+function closeRunPicker(){ document.getElementById('run-overlay').classList.remove('show'); }
+
+// ---- benchmark display-existing vs retest chooser ----
+let _benchResolver = null;
+function chooseBenchMode(runId){
+  const ov = document.getElementById('bench-mode-overlay');
+  const tt = document.getElementById('bench-mode-title');
+  const pp = document.getElementById('bench-mode-prompt');
+  if(tt) tt.textContent = `Benchmark ${runId}`;
+  if(pp) pp.textContent = 'This run was already benchmarked. Will you display existing results or retest?';
+  ov.classList.add('show');
+  return new Promise(res=>{ _benchResolver = res; });
+}
+function resolveBenchMode(mode){
+  document.getElementById('bench-mode-overlay').classList.remove('show');
+  const r = _benchResolver; _benchResolver = null;
+  if(r) r(mode);
+}
+
+async function runBenchmarkOn(runId, hasBenchmark){
+  closeRunPicker();
+  // already-benchmarked runs: ask whether to show saved results or recompute
+  if(hasBenchmark){
+    const choice = await chooseBenchMode(runId);
+    if(!choice) return;                 // cancelled
+    if(choice === 'existing'){ return displayExistingResults(runId); }
+    // 'retest' falls through to the recompute path below
+  }
+  setNav('benchmark');
+  const sub = document.getElementById('bm-sub');
+  const prevSub = sub ? sub.textContent : '';
+  if(sub) sub.textContent = `Benchmarking ${runId}…`;
+  try{
+    const r = await fetch(`/api/runs/${runId}/benchmark`, {method:'POST',
+      headers:{'Content-Type':'application/json'}, body:'{}'});
+    if(!r.ok){
+      const e = await r.json().catch(()=>({error:'request failed'}));
+      if(sub) sub.textContent = e.message || e.error || 'benchmark failed';
+      return;
+    }
+    const res = await r.json();
+    CURRENT_RUN = res.run_id;
+    applyFullState(res.full_state);
+    renderAll();
+    const bench = res.full_state.benchmark || {};
+    const promoted = (res.full_state.feedback && res.full_state.feedback.decision === 'promote');
+    if(sub) sub.textContent = `${runId} — overall ${bench.overall}/100 (${bench.status})`;
+    // chain: Benchmark -> Feedback -> Packages
+    await beat(650); setNav('feedback');
+    await beat(650); setNav('packages');
+  }catch(err){
+    if(sub) sub.textContent = `benchmark failed: ${err.message}`;
+    setTimeout(()=>{ if(sub) sub.textContent = prevSub; }, 4000);
+  }
+}
+
+// READ-ONLY: load and show a run's saved benchmark/feedback/packages
+async function displayExistingResults(runId){
+  setNav('benchmark');
+  const sub = document.getElementById('bm-sub');
+  const prevSub = sub ? sub.textContent : '';
+  if(sub) sub.textContent = `Loading saved results for ${runId}…`;
+  try{
+    const r = await fetch(`/api/runs/${runId}/results`);
+    if(!r.ok){
+      const e = await r.json().catch(()=>({error:'request failed'}));
+      if(sub) sub.textContent = e.message || e.error || 'no saved results';
+      setTimeout(()=>{ if(sub) sub.textContent = prevSub; }, 4000);
+      return;
+    }
+    const res = await r.json();
+    CURRENT_RUN = res.run_id;
+    applyFullState(res.full_state);
+    renderAll();
+    const bench = res.full_state.benchmark || {};
+    if(sub) sub.textContent = `${runId} — saved results · overall ${bench.overall}/100 (${bench.status})`;
+    await beat(650); setNav('feedback');
+    await beat(650); setNav('packages');
+  }catch(err){
+    if(sub) sub.textContent = `failed to load results: ${err.message}`;
+    setTimeout(()=>{ if(sub) sub.textContent = prevSub; }, 4000);
+  }
+}
+
+async function runGeneration(){
+  const v = document.getElementById('gen-version').value.trim();
+  const status = document.getElementById('gen-status');
+  if(!/^v\d+$/.test(v)){
+    status.innerHTML = '<span style="color:var(--red)">Version must look like v1, v2, v3 …</span>';
+    return;
+  }
+  const dupBlock = document.getElementById('gen-dup').value.startsWith('Block');
+  const aiEnrich = (document.getElementById('gen-ai')||{}).value === 'on';
+  const sel = document.getElementById('gen-source');
+  const src = sel ? sel.value : 'CPI';
+  const btn = document.getElementById('gen-pairs-btn');
+
+  if(!LIVE){
+    status.innerHTML = '<span style="color:var(--amber)">Live generation needs the server. '+
+      'Start it with <code>python -m orchestrator.server</code>, then open '+
+      '<code>http://127.0.0.1:8765</code>.</span>';
+    return;
+  }
+
+  // map the source selector to a fixtures path the server can read.
+  // CPI/PIPO/S4H sap_sid -> bundled sample; ALL -> whole fixtures tree.
+  const SRC_MAP = {
+    CPI:  'tests/fixtures/cpi/mpl_sample.json',
+    PIPO: 'tests/fixtures/pipo',
+    ALL:  'tests/fixtures',
+  };
+  const source = SRC_MAP[src] || `tests/fixtures/s4h`;  // S4H SID -> s4h tree
+  const platform = (src==='ALL') ? 'all'
+                 : (src==='PIPO') ? 'pipo'
+                 : (src==='CPI')  ? 'cpi' : 's4h';
+
+  if(btn){ btn.disabled = true; }
+  status.innerHTML = qkRunning('Generating atomic KB + RB pairs…');
+  const _pairBody = document.getElementById('gen-pairs-rows');
+  if(_pairBody) _pairBody.innerHTML = '<tr><td colspan="3">'
+    + qkRunning('Generating atomic KB + RB pairs…') + '</td></tr>';
+
+  try{
+    const r = await fetch('/api/pipeline', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({platform, source, version:v,
+                            duplicate_block:dupBlock, ai_enrich:aiEnrich, promote:true})
+    });
+    if(!r.ok){ const e = await r.json().catch(()=>({error:'request failed'}));
+      throw new Error(e.error||'request failed'); }
+    const res = await r.json();
+    const fs = res.full_state;
+    CURRENT_RUN = fs.run_id;
+    applyFullState(fs);
+
+    const pairs = (fs.packages||[]).length/2;
+    const bench = fs.benchmark||{};
+    const promoted = (fs.feedback&&fs.feedback.decision==='promote');
+
+    // walk the tabs with a short beat between each so the run's lifecycle reads
+    status.innerHTML =
+      stepLine('generate','done',`${pairs} KB+RB pair(s) at ${v} · run ${CURRENT_RUN}`) +
+      stepLine('benchmark','active','Scoring retrieval readiness…');
+    renderAll();
+
+    await beat(550);
+    setNav('benchmark');
+    status.innerHTML =
+      stepLine('generate','done',`${pairs} KB+RB pair(s) at ${v} · run ${CURRENT_RUN}`) +
+      stepLine('benchmark', bench.overall>=80?'done':'warn',
+               `Overall ${bench.overall}/100 — ${bench.status}`) +
+      stepLine('feedback','active','Building promotion decision…');
+
+    await beat(550);
+    setNav('feedback');
+    status.innerHTML =
+      stepLine('generate','done',`${pairs} pair(s) · ${v}`) +
+      stepLine('benchmark', bench.overall>=80?'done':'warn',`Overall ${bench.overall}/100`) +
+      stepLine('feedback', promoted?'done':'warn',
+               promoted?'Promoted — all documents meet the threshold'
+                       :'Held for remediation — see corrective hints') +
+      stepLine('packages','active','Listing generated artifacts…');
+
+    await beat(450);
+    setNav('packages');
+    status.innerHTML =
+      stepLine('generate','done',`${pairs} pair(s) · ${v}`) +
+      stepLine('benchmark', bench.overall>=80?'done':'warn',`Overall ${bench.overall}/100`) +
+      stepLine('feedback', promoted?'done':'warn', promoted?'Promoted':'Held') +
+      stepLine('packages','done',`${(fs.packages||[]).length} document(s) ready — view or download below`);
+
+  }catch(err){
+    status.innerHTML = stepLine('generate','warn','Generation failed: '+err.message);
+  }finally{
+    if(btn){ btn.disabled = false; }
+  }
+}
+
+function beat(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function stepLine(stage,state,text){
+  const dot = state==='done'?'var(--teal)':state==='warn'?'var(--amber)':'var(--blue)';
+  const label = {generate:'01 Generate',benchmark:'02 Benchmark',
+                 feedback:'03 Feedback',packages:'04 Packages'}[stage]||stage;
+  const spin = state==='active'?' …':'';
+  return `<div style="display:flex;gap:8px;align-items:center;margin:3px 0">
+    <span style="width:8px;height:8px;border-radius:50%;background:${dot};display:inline-block"></span>
+    <span style="font-family:var(--mono);font-size:11px;color:var(--faint)">${label}</span>
+    <span style="font-size:13px">${text}${spin}</span></div>`;
+}
+
+// overwrite confirmation flow (mirrors GenerationManager.confirm_overwrite)
+let pendingFile=null;
+function askOverwrite(file){pendingFile=file;
+  document.getElementById('ov-file').textContent=file;
+  document.getElementById('overlay').classList.add('show');}
+function closeOverlay(){document.getElementById('overlay').classList.remove('show');pendingFile=null;}
+function confirmOverwrite(){
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('gen-status').innerHTML =
+    `<span style="color:var(--teal)">${pendingFile} overwritten after confirmation.</span>`;
+  document.querySelector('[data-s="generation"]').click();
+  pendingFile=null;
+}
+
+loadLive();
 </script>
 </body>
 </html>
